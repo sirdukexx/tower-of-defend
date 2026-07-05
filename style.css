@@ -176,6 +176,28 @@ html, body {
 /* Keep the tower upgrade popup inside narrow screens */
 #towerPanel { max-width: calc(100vw - 16px); }
 
+/* ---- Force landscape on phones: block portrait with a rotate prompt ---- */
+#rotateGate { display: none; }
+@media (orientation: portrait) and (pointer: coarse) {
+  #rotateGate {
+    display: flex;
+    position: fixed; inset: 0; z-index: 100;
+    flex-direction: column; align-items: center; justify-content: center;
+    gap: 16px; text-align: center; padding: 28px;
+    background: #10161e; color: #f4e6c8;
+  }
+  #rotateGate .rg-icon {
+    font-size: 64px; line-height: 1;
+    animation: rg-rotate 2.2s ease-in-out infinite;
+  }
+  #rotateGate .rg-title { font-size: 22px; font-weight: bold; color: #ffd876; }
+  #rotateGate .rg-sub { font-size: 14px; color: #d8c19a; line-height: 1.6; }
+}
+@keyframes rg-rotate {
+  0%, 40%   { transform: rotate(0deg); }
+  60%, 100% { transform: rotate(-90deg); }
+}
+
 /* ---- Landscape phones / short viewports: side-by-side, compact ---- */
 @media (orientation: landscape) and (max-height: 560px) {
   #app { grid-template-columns: 1fr minmax(150px, 200px); }
