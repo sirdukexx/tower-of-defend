@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tower of Defend</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+
+  <header id="topbar">
+    <div class="brand">🏰 TOWER OF DEFEND</div>
+    <div class="stats">
+      <div class="stat"><img src="assets/gui/ico_3.png" alt="gold"><span id="goldVal">0</span></div>
+      <div class="stat"><img src="assets/gui/heart.png" alt="lives"><span id="livesVal">0</span></div>
+      <div class="stat">Wave <span id="waveVal">0</span>/<span id="waveMax">10</span></div>
+    </div>
+    <div class="actions">
+      <button id="startWaveBtn" class="btn-primary">▶ เริ่มเวฟ</button>
+      <button id="changeMapBtn" class="btn-secondary">🗺 เปลี่ยนแมพ</button>
+      <button id="speedBtn" class="btn-secondary">1x</button>
+      <button id="pauseBtn" class="btn-secondary"><img src="assets/gui/button_pause.png" alt="pause"></button>
+    </div>
+  </header>
+
+  <main id="playfield">
+    <canvas id="game" width="1280" height="720"></canvas>
+
+    <div id="towerPanel" class="hidden">
+      <div id="towerPanelInfo"></div>
+      <div id="towerPanelActions">
+        <button id="upgradeBtn">⬆ อัพเกรด</button>
+        <button id="sellBtn">💰 ขาย</button>
+        <button id="closeTowerPanel">✕</button>
+      </div>
+    </div>
+
+    <div id="toast"></div>
+  </main>
+
+  <aside id="sidebar">
+    <h3>สร้างหอคอย</h3>
+    <div class="tower-buy" data-tower="archer">
+      <img src="assets/towers/archer_1.png">
+      <div class="tb-info"><b>Archer</b><span>ยิงไว ดาเมจต่ำ</span></div>
+      <div class="tb-cost">50g</div>
+    </div>
+    <div class="tower-buy" data-tower="magic">
+      <img src="assets/towers/magic_1.png">
+      <div class="tb-info"><b>Magic</b><span>ดาเมจเป็นพื้นที่</span></div>
+      <div class="tb-cost">80g</div>
+    </div>
+    <div class="tower-buy" data-tower="stone">
+      <img src="assets/towers/stone_1.png">
+      <div class="tb-info"><b>Cannon</b><span>ดาเมจสูง ยิงช้า</span></div>
+      <div class="tb-cost">100g</div>
+    </div>
+    <div class="tower-buy" data-tower="support">
+      <img src="assets/towers/support_1.png">
+      <div class="tb-info"><b>Frost</b><span>ชะลอศัตรู</span></div>
+      <div class="tb-cost">70g</div>
+    </div>
+    <div class="tower-buy" data-tower="lightning">
+      <img src="assets/towers/lightning_1.png">
+      <div class="tb-info"><b>Lightning</b><span>สายฟ้าผ่า โดนทันที</span></div>
+      <div class="tb-cost">120g</div>
+    </div>
+    <div class="tower-buy" data-tower="poison">
+      <img src="assets/towers/poison_1.png">
+      <div class="tb-info"><b>Poison</b><span>พิษกัดต่อเนื่อง</span></div>
+      <div class="tb-cost">90g</div>
+    </div>
+    <div class="tower-buy" data-tower="flame">
+      <img src="assets/towers/flame_1.png">
+      <div class="tb-info"><b>Flame</b><span>ไฟลามเผาเป็นพื้นที่</span></div>
+      <div class="tb-cost">110g</div>
+    </div>
+    <div class="tower-buy" data-tower="sniper">
+      <img src="assets/towers/sniper_1.png">
+      <div class="tb-info"><b>Sniper</b><span>ยิงไกลสุดขีด แรงมาก</span></div>
+      <div class="tb-cost">130g</div>
+    </div>
+    <div class="tower-buy" data-tower="bomb">
+      <img src="assets/towers/bomb_1.png">
+      <div class="tb-info"><b>Bomb</b><span>ระเบิดใหญ่ พื้นที่กว้าง</span></div>
+      <div class="tb-cost">150g</div>
+    </div>
+    <div class="tower-buy" data-tower="ember">
+      <img src="assets/towers/ember_1.png">
+      <div class="tb-info"><b>Lava</b><span>ลูกไฟลอย แตกสะเก็ดไฟ</span></div>
+      <div class="tb-cost">125g</div>
+    </div>
+    <div class="tower-buy" data-tower="arcane">
+      <img src="assets/towers/arcane_1.png">
+      <div class="tb-info"><b>Arcane</b><span>สายฟ้าเขียว โจมตีเป็นพื้นที่</span></div>
+      <div class="tb-cost">100g</div>
+    </div>
+    <div class="tower-buy" data-tower="storm">
+      <img src="assets/towers/storm_1.png">
+      <div class="tb-info"><b>Storm</b><span>สายฟ้าน้ำเงิน คริสตัลพลัง</span></div>
+      <div class="tb-cost">115g</div>
+    </div>
+    <div class="tower-buy" data-tower="hex">
+      <img src="assets/towers/hex_1.png">
+      <div class="tb-info"><b>Hex</b><span>สายฟ้าแดง เวทมนตร์มืด</span></div>
+      <div class="tb-cost">130g</div>
+    </div>
+    <div class="tower-buy" data-tower="ranger">
+      <img src="assets/towers/ranger_1.png">
+      <div class="tb-info"><b>Ranger</b><span>นักธนูบนหอฟาง ยิงไกล</span></div>
+      <div class="tb-cost">90g</div>
+    </div>
+    <div class="tower-buy" data-tower="ballista">
+      <img src="assets/towers/ballista_1.png">
+      <div class="tb-info"><b>Ballista</b><span>เครื่องยิงลูกดอก แรงสูง</span></div>
+      <div class="tb-cost">140g</div>
+    </div>
+    <p class="hint">เลือกหอคอย แล้วคลิกวางบน "แท่นหิมะ" ที่ว่างเท่านั้น (วงแหวนสีทองจะโชว์จุดที่วางได้)</p>
+  </aside>
+
+</div>
+
+<div id="overlay" class="hidden">
+  <div id="overlayBox">
+    <img id="overlayHeader" src="">
+    <h2 id="overlayTitle"></h2>
+    <p id="overlaySub"></p>
+    <button id="overlayBtn" class="btn-primary">เลือกแมพใหม่</button>
+  </div>
+</div>
+
+<div id="levelSelect">
+  <div id="levelSelectBox">
+    <h2>เลือกแมพ</h2>
+    <p class="hint">แต่ละแมพประกอบจากชิ้นถนนเดียวกัน แต่ผังเส้นทาง/จำนวนทางเข้าไม่เหมือนกัน</p>
+    <div id="levelList"></div>
+  </div>
+</div>
+
+<script src="maps/level1.js"></script>
+<script src="maps/level2.js"></script>
+<script src="maps/level3.js"></script>
+<script src="maps/level4.js"></script>
+<script src="maps/level5.js"></script>
+<script src="maps/level6.js"></script>
+<script src="maps/level7.js"></script>
+<script src="maps/level8.js"></script>
+<script src="maps/level9.js"></script>
+<script src="maps/level10.js"></script>
+<script src="maps/level11.js"></script>
+<script src="maps/level12.js"></script>
+<script src="maps/level13.js"></script>
+<script src="maps/level14.js"></script>
+<script src="maps/level15.js"></script>
+<script src="maps/level16.js"></script>
+<script src="maps/level17.js"></script>
+<script src="maps/level18.js"></script>
+<script src="game.js"></script>
+</body>
+</html>

@@ -1,0 +1,162 @@
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0; height: 100%;
+  background: #1a1108;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  color: #f4e6c8;
+  overflow: hidden;
+}
+
+#app {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  grid-template-columns: 1fr 260px;
+  grid-template-areas:
+    "topbar topbar"
+    "playfield sidebar";
+  height: 100vh;
+}
+
+#topbar {
+  grid-area: topbar;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: linear-gradient(#3a2614, #241708);
+  border-bottom: 3px solid #6b4a24;
+}
+
+.brand { font-weight: bold; font-size: 18px; letter-spacing: 1px; color: #ffd876; }
+
+.stats { display: flex; gap: 20px; }
+.stat { display: flex; align-items: center; gap: 6px; font-weight: bold; font-size: 16px; }
+.stat img { width: 26px; height: 26px; object-fit: contain; }
+
+.actions { display: flex; gap: 8px; align-items: center; }
+.btn-primary, .btn-secondary {
+  cursor: pointer; border: 2px solid #6b4a24; border-radius: 6px;
+  padding: 8px 14px; font-weight: bold; font-size: 14px;
+}
+.btn-primary { background: #ffb238; color: #3a2100; }
+.btn-primary:hover { background: #ffc862; }
+.btn-primary:disabled { background: #7a6440; color: #3a2100; cursor: not-allowed; opacity: 0.6; }
+.btn-secondary { background: #4a3418; color: #f4e6c8; }
+.btn-secondary:hover { background: #5f4520; }
+.btn-secondary img { width: 18px; height: 18px; vertical-align: middle; }
+
+#playfield {
+  grid-area: playfield;
+  position: relative;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+#game {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  cursor: crosshair;
+}
+
+#sidebar {
+  grid-area: sidebar;
+  background: linear-gradient(#3a2614, #241708);
+  border-left: 3px solid #6b4a24;
+  padding: 12px;
+  overflow-y: auto;
+}
+#sidebar h3 { margin: 4px 0 12px; color: #ffd876; }
+
+.tower-buy {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  background: #2c1c0d;
+  border: 2px solid #5a3f1f;
+  border-radius: 8px;
+  padding: 6px 8px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: 0.15s;
+}
+.tower-buy:hover { border-color: #ffb238; }
+.tower-buy.selected { border-color: #ffd876; background: #4a3013; box-shadow: 0 0 8px #ffb23855; }
+.tower-buy img { width: 42px; height: 42px; object-fit: contain; }
+.tb-info { display: flex; flex-direction: column; font-size: 12px; }
+.tb-info b { font-size: 13px; color: #ffd876; }
+.tb-cost { font-size: 12px; font-weight: bold; color: #9be564; }
+.hint { font-size: 11px; color: #b39b76; line-height: 1.4; }
+
+#towerPanel {
+  position: absolute;
+  background: #241708ee;
+  border: 2px solid #ffb238;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 13px;
+  min-width: 170px;
+  z-index: 5;
+}
+#towerPanel.hidden { display: none; }
+#towerPanelInfo { margin-bottom: 8px; line-height: 1.5; }
+#towerPanelActions { display: flex; gap: 6px; }
+#towerPanelActions button {
+  flex: 1; cursor: pointer; border: 1px solid #6b4a24; border-radius: 5px;
+  padding: 5px; background: #4a3418; color: #f4e6c8; font-size: 12px;
+}
+#towerPanelActions button:hover { background: #5f4520; }
+#upgradeBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+#toast {
+  position: absolute;
+  top: 12px; left: 50%; transform: translateX(-50%);
+  background: #a11c1cdd; color: #fff; padding: 6px 16px;
+  border-radius: 6px; font-weight: bold; font-size: 13px;
+  opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+#toast.show { opacity: 1; }
+
+#overlay {
+  position: fixed; inset: 0; background: #000000cc;
+  display: flex; align-items: center; justify-content: center; z-index: 20;
+}
+#overlay.hidden { display: none; }
+#overlayBox {
+  background: #241708; border: 3px solid #ffb238; border-radius: 12px;
+  padding: 24px 36px; text-align: center; max-width: 380px;
+}
+#overlayHeader { max-width: 260px; margin-bottom: 8px; }
+#overlayTitle { color: #ffd876; margin: 6px 0; }
+#overlaySub { color: #d8c19a; margin-bottom: 16px; }
+
+#levelSelect {
+  position: fixed; inset: 0; background: #10161ecc;
+  display: flex; align-items: center; justify-content: center; z-index: 30;
+}
+#levelSelect.hidden { display: none; }
+#levelSelectBox {
+  background: #241708; border: 3px solid #ffb238; border-radius: 12px;
+  padding: 28px 34px; text-align: center; max-width: 920px;
+  max-height: 88vh; overflow-y: auto;
+}
+#levelSelectBox h2 { color: #ffd876; margin: 0 0 6px; }
+#levelSelectBox .hint { color: #d8c19a; font-size: 12px; margin-bottom: 18px; }
+#levelList {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;
+}
+.level-card {
+  cursor: pointer; text-align: left;
+  background: #2c1c0d; border: 2px solid #5a3f1f; border-radius: 10px;
+  padding: 14px 16px; color: #f4e6c8; font-family: inherit;
+  display: flex; flex-direction: column; gap: 6px; transition: 0.15s;
+}
+.level-card:hover { border-color: #ffb238; background: #3a2510; }
+.level-card b { color: #ffd876; font-size: 15px; }
+.level-card span { font-size: 12px; color: #c9b48c; }
+
+.hidden { display: none !important; }
