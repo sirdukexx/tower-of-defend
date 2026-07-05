@@ -27,23 +27,44 @@ html, body {
   border-bottom: 3px solid #6b4a24;
 }
 
-.brand { font-weight: bold; font-size: 18px; letter-spacing: 1px; color: #ffd876; }
+/* pixel-art font, applied only to English/number UI (Thai keeps a normal font) */
+:root { --pixel: 'Silkscreen', ui-monospace, 'Courier New', monospace; }
 
-.stats { display: flex; gap: 20px; }
-.stat { display: flex; align-items: center; gap: 6px; font-weight: bold; font-size: 16px; }
-.stat img { width: 26px; height: 26px; object-fit: contain; }
+.brand {
+  font-family: var(--pixel);
+  font-weight: 700; font-size: 13px; letter-spacing: 1px;
+  color: #ffe0b0; text-shadow: 2px 2px 0 #000;
+}
 
+/* pixel-art framed stat badges (skull/coin/heart look) */
+.stats { display: flex; gap: 10px; }
+.stat {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--pixel); font-weight: 700; font-size: 14px;
+  color: #3a2410; padding: 5px 10px 4px;
+  background: linear-gradient(#f0d3a0, #d9ab6e);
+  border: 3px solid #6e3f1e; border-radius: 7px;
+  box-shadow: inset 0 2px 0 #fbe8c4, inset 0 -3px 0 #b07c40, 0 2px 0 #000;
+  text-shadow: 1px 1px 0 #f6e2bd;
+}
+.stat img { width: 20px; height: 20px; object-fit: contain; }
+
+/* pixel-art buttons (chunky beveled frames) */
 .actions { display: flex; gap: 8px; align-items: center; }
 .btn-primary, .btn-secondary {
-  cursor: pointer; border: 2px solid #6b4a24; border-radius: 6px;
-  padding: 8px 14px; font-weight: bold; font-size: 14px;
+  cursor: pointer;
+  font-family: var(--pixel); font-weight: 700; font-size: 13px;
+  min-width: 40px; min-height: 38px; padding: 6px 12px;
+  border: 3px solid #4a2a10; border-radius: 7px;
+  display: inline-flex; align-items: center; justify-content: center;
+  box-shadow: inset 0 2px 0 rgba(255,255,255,0.4), inset 0 -3px 0 rgba(0,0,0,0.25), 0 2px 0 #000;
 }
-.btn-primary { background: #ffb238; color: #3a2100; }
-.btn-primary:hover { background: #ffc862; }
-.btn-primary:disabled { background: #7a6440; color: #3a2100; cursor: not-allowed; opacity: 0.6; }
-.btn-secondary { background: #4a3418; color: #f4e6c8; }
-.btn-secondary:hover { background: #5f4520; }
-.btn-secondary img { width: 18px; height: 18px; vertical-align: middle; }
+.btn-primary { background: linear-gradient(#ffd06a, #f2a52e); color: #4a2600; text-shadow: 1px 1px 0 #ffe6a8; }
+.btn-primary:hover { background: linear-gradient(#ffdc86, #ffb648); }
+.btn-primary:disabled { filter: grayscale(0.5) brightness(0.82); cursor: not-allowed; opacity: 0.75; }
+.btn-secondary { background: linear-gradient(#caa06a, #a2703c); color: #2e1a08; text-shadow: 1px 1px 0 #e5c79a; }
+.btn-secondary:hover { background: linear-gradient(#d9b078, #b57f46); }
+.btn-secondary img { width: 16px; height: 16px; vertical-align: middle; }
 
 #playfield {
   grid-area: playfield;
@@ -67,31 +88,57 @@ html, body {
   grid-area: sidebar;
   background: linear-gradient(#3a2614, #241708);
   border-left: 3px solid #6b4a24;
-  padding: 12px;
+  padding: 10px;
   overflow-y: auto;
-}
-#sidebar h3 { margin: 4px 0 12px; color: #ffd876; }
-
-.tower-buy {
   display: grid;
-  grid-template-columns: 44px 1fr auto;
-  align-items: center;
-  gap: 8px;
-  background: #2c1c0d;
-  border: 2px solid #5a3f1f;
-  border-radius: 8px;
-  padding: 6px 8px;
-  margin-bottom: 10px;
-  cursor: pointer;
-  transition: 0.15s;
+  grid-template-columns: 1fr 1fr;
+  grid-auto-rows: min-content;
+  gap: 9px;
+  align-content: start;
 }
-.tower-buy:hover { border-color: #ffb238; }
-.tower-buy.selected { border-color: #ffd876; background: #4a3013; box-shadow: 0 0 8px #ffb23855; }
-.tower-buy img { width: 42px; height: 42px; object-fit: contain; }
-.tb-info { display: flex; flex-direction: column; font-size: 12px; }
-.tb-info b { font-size: 13px; color: #ffd876; }
-.tb-cost { font-size: 12px; font-weight: bold; color: #9be564; }
-.hint { font-size: 11px; color: #b39b76; line-height: 1.4; }
+#sidebar h3 {
+  grid-column: 1 / -1; margin: 2px 0 4px; text-align: center;
+  font-family: var(--pixel); font-size: 13px; letter-spacing: 2px;
+  color: #ffe0b0; text-shadow: 2px 2px 0 #000;
+}
+
+/* salmon pixel-art tower cards: name on top, portrait, cost badge bottom-left */
+.tower-buy {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  background: linear-gradient(#eba79a, #d98577);
+  border: 3px solid #7e3f34; border-radius: 8px;
+  padding: 6px 4px 8px;
+  cursor: pointer; transition: filter 0.1s;
+  box-shadow: inset 0 2px 0 #f6cabf, inset 0 -3px 0 #b96b5c, 0 2px 0 #000;
+}
+.tower-buy:hover { filter: brightness(1.06); }
+.tower-buy.selected {
+  border-color: #ffd54a;
+  box-shadow: inset 0 2px 0 #f6cabf, inset 0 -3px 0 #b96b5c, 0 0 0 2px #ffd54a, 0 0 10px #ffd54a99;
+}
+.tower-buy img {
+  width: 46px; height: 46px; object-fit: contain;
+  filter: drop-shadow(0 2px 1px rgba(0,0,0,0.35));
+}
+.tb-info { order: -1; text-align: center; line-height: 1; }
+.tb-info b {
+  font-family: var(--pixel); font-weight: 700; font-size: 10px; letter-spacing: 0.5px;
+  color: #3a1a12; text-transform: uppercase; text-shadow: 1px 1px 0 #f2b6a8;
+}
+.tb-info span { display: none; }   /* drop Thai description in the card grid */
+.tb-cost {
+  position: absolute; left: 4px; bottom: 3px;
+  font-family: var(--pixel); font-weight: 700; font-size: 10px;
+  color: #ffe08a; background: #2c1108;
+  border: 2px solid #5a2418; border-radius: 5px; padding: 1px 4px;
+  text-shadow: 1px 1px 0 #000;
+}
+.hint {
+  grid-column: 1 / -1; margin: 4px 0 0;
+  font-size: 11px; color: #b39b76; line-height: 1.4;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+}
 
 #towerPanel {
   position: absolute;
@@ -204,7 +251,7 @@ html, body {
    fills the full viewport height instead of being boxed in by chrome. */
 @media (orientation: landscape) and (max-height: 560px) {
   #app {
-    grid-template-columns: 1fr minmax(128px, 152px);
+    grid-template-columns: 1fr minmax(150px, 176px);
     grid-template-rows: 1fr;
     grid-template-areas: "playfield sidebar";
   }
@@ -216,32 +263,26 @@ html, body {
     background: linear-gradient(#3a2614f2, #241708d0);
     border-bottom: 1px solid #6b4a24;
   }
-  .brand { font-size: 12px; letter-spacing: 0; }
-  .stats { gap: 10px; }
-  .stat { font-size: 12px; gap: 4px; }
-  .stat img { width: 16px; height: 16px; }
+  .brand { font-size: 11px; letter-spacing: 0; }
+  .stats { gap: 8px; }
+  .stat { font-size: 11px; gap: 4px; padding: 3px 7px 2px; border-width: 2px; }
+  .stat img { width: 15px; height: 15px; }
   .actions { gap: 5px; }
-  .btn-primary, .btn-secondary { padding: 4px 7px; font-size: 11px; }
+  .btn-primary, .btn-secondary {
+    padding: 3px 8px; font-size: 11px; min-height: 30px; min-width: 32px; border-width: 2px;
+  }
   .btn-secondary img { width: 13px; height: 13px; }
 
   #playfield { grid-area: playfield; }
 
-  /* Narrow shop dock; push its list below the floating HUD */
-  #sidebar { grid-area: sidebar; padding: 6px; padding-top: 40px; }
+  /* Narrow 2-col shop dock; push its cards below the floating HUD */
+  #sidebar { grid-area: sidebar; padding: 6px; padding-top: 42px; gap: 7px; }
   #sidebar h3 { display: none; }
-  .tower-buy {
-    grid-template-columns: 28px 1fr;
-    grid-template-areas:
-      "icon info"
-      "icon cost";
-    column-gap: 6px; row-gap: 0;
-    padding: 4px 6px; margin-bottom: 6px;
-  }
-  .tower-buy img { grid-area: icon; width: 28px; height: 28px; align-self: center; }
-  .tb-info { grid-area: info; font-size: 10px; }
-  .tb-info b { font-size: 11px; }
-  .tb-info span { display: none; }
-  .tb-cost { grid-area: cost; font-size: 10px; }
+  .hint { display: none; }
+  .tower-buy { padding: 4px 3px 6px; }
+  .tower-buy img { width: 38px; height: 38px; }
+  .tb-info b { font-size: 9px; }
+  .tb-cost { font-size: 9px; }
 }
 
 /* ---- Portrait phones: stack board on top, shop as scroll strip ---- */
@@ -269,7 +310,7 @@ html, body {
   .btn-primary, .btn-secondary { padding: 6px 9px; font-size: 12px; }
   .btn-secondary img { width: 15px; height: 15px; }
 
-  /* Shop: horizontal thumb-scrollable strip beneath the board */
+  /* Shop: horizontal thumb-scrollable strip of pixel cards beneath the board */
   #sidebar {
     border-left: none;
     border-top: 3px solid #6b4a24;
@@ -281,21 +322,8 @@ html, body {
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
   }
-  #sidebar h3 { display: none; }
-  .tower-buy {
-    flex: 0 0 auto;
-    width: 132px;
-    margin-bottom: 0;
-    grid-template-columns: 34px 1fr;
-    grid-template-areas:
-      "icon info"
-      "icon cost";
-    column-gap: 8px; row-gap: 2px;
-  }
-  .tower-buy img { grid-area: icon; width: 34px; height: 34px; align-self: center; }
-  .tb-info { grid-area: info; }
-  .tb-info span { display: none; }    /* hide description; keep cards short so the board stays big */
-  .tb-cost { grid-area: cost; }
+  #sidebar h3, .hint { display: none; }
+  .tower-buy { flex: 0 0 auto; width: 82px; }
 }
 
 /* ---- Map-select overlay: fewer columns on small screens ---- */

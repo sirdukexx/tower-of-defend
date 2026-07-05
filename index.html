@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tower of Defend</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -17,8 +20,8 @@
       <div class="stat">Wave <span id="waveVal">0</span>/<span id="waveMax">10</span></div>
     </div>
     <div class="actions">
-      <button id="startWaveBtn" class="btn-primary">▶ เริ่มเวฟ</button>
-      <button id="changeMapBtn" class="btn-secondary">🗺 เปลี่ยนแมพ</button>
+      <button id="startWaveBtn" class="btn-primary" title="เริ่มเวฟ">▶</button>
+      <button id="changeMapBtn" class="btn-secondary" title="เปลี่ยนแมพ">🗺</button>
       <button id="speedBtn" class="btn-secondary">1x</button>
       <button id="pauseBtn" class="btn-secondary"><img src="assets/gui/button_pause.png" alt="pause"></button>
     </div>
@@ -40,7 +43,7 @@
   </main>
 
   <aside id="sidebar">
-    <h3>สร้างหอคอย</h3>
+    <h3>TOWERS</h3>
     <div class="tower-buy" data-tower="archer">
       <img src="assets/towers/archer_1.png">
       <div class="tb-info"><b>Archer</b><span>ยิงไว ดาเมจต่ำ</span></div>
