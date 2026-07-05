@@ -198,27 +198,49 @@ html, body {
   60%, 100% { transform: rotate(-90deg); }
 }
 
-/* ---- Landscape phones / short viewports: side-by-side, compact ---- */
+/* ---- Landscape phones: maximise the board ----
+   Float the HUD over the top and shrink the shop dock so the 16:9 map
+   fills the full viewport height instead of being boxed in by chrome. */
 @media (orientation: landscape) and (max-height: 560px) {
-  #app { grid-template-columns: 1fr minmax(150px, 200px); }
+  #app {
+    grid-template-columns: 1fr minmax(128px, 152px);
+    grid-template-rows: 1fr;
+    grid-template-areas: "playfield sidebar";
+  }
 
-  #topbar { padding: 4px 10px; }
-  .brand { font-size: 13px; letter-spacing: 0; }
+  /* HUD floats over the board — takes no vertical space from the map */
+  #topbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 15;
+    padding: 3px 8px;
+    background: linear-gradient(#3a2614f2, #241708d0);
+    border-bottom: 1px solid #6b4a24;
+  }
+  .brand { font-size: 12px; letter-spacing: 0; }
   .stats { gap: 10px; }
-  .stat { font-size: 13px; gap: 4px; }
-  .stat img { width: 18px; height: 18px; }
+  .stat { font-size: 12px; gap: 4px; }
+  .stat img { width: 16px; height: 16px; }
   .actions { gap: 5px; }
-  .btn-primary, .btn-secondary { padding: 5px 8px; font-size: 12px; }
-  .btn-secondary img { width: 14px; height: 14px; }
+  .btn-primary, .btn-secondary { padding: 4px 7px; font-size: 11px; }
+  .btn-secondary img { width: 13px; height: 13px; }
 
-  #sidebar { padding: 6px; }
-  #sidebar h3 { font-size: 13px; margin: 2px 0 6px; }
-  .tower-buy { grid-template-columns: 32px 1fr auto; gap: 6px; padding: 4px 6px; margin-bottom: 6px; }
-  .tower-buy img { width: 30px; height: 30px; }
-  .tb-info { font-size: 10px; }
+  #playfield { grid-area: playfield; }
+
+  /* Narrow shop dock; push its list below the floating HUD */
+  #sidebar { grid-area: sidebar; padding: 6px; padding-top: 40px; }
+  #sidebar h3 { display: none; }
+  .tower-buy {
+    grid-template-columns: 28px 1fr;
+    grid-template-areas:
+      "icon info"
+      "icon cost";
+    column-gap: 6px; row-gap: 0;
+    padding: 4px 6px; margin-bottom: 6px;
+  }
+  .tower-buy img { grid-area: icon; width: 28px; height: 28px; align-self: center; }
+  .tb-info { grid-area: info; font-size: 10px; }
   .tb-info b { font-size: 11px; }
-  .tb-cost { font-size: 11px; }
-  .hint { font-size: 10px; line-height: 1.3; }
+  .tb-info span { display: none; }
+  .tb-cost { grid-area: cost; font-size: 10px; }
 }
 
 /* ---- Portrait phones: stack board on top, shop as scroll strip ---- */
