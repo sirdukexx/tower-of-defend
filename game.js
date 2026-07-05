@@ -1,7 +1,23 @@
 // ===================== Tower of Defend =====================
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
-const W = canvas.width, H = canvas.height;
+const W = canvas.width, H = canvas.height;   // fixed 1280x720 WORLD size
+
+// Size the canvas backing store to the device's real pixels so the browser
+// never resamples a downscaled bitmap every frame. Without this, on high-DPR
+// phones the fixed 1280x720 buffer is stretched by CSS and re-sampled each
+// RAF, making crisp edges (e.g. tower bases) shimmer/"vibrate". Drawing at
+// native resolution keeps static art pixel-stable and sharper. The 1280x720
+// world is letterboxed onto this buffer by a base transform set in render().
+function fitCanvas() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 3); // cap cost on 3x+ screens
+  const cw = Math.round(canvas.clientWidth * dpr);
+  const ch = Math.round(canvas.clientHeight * dpr);
+  if (cw > 0 && ch > 0 && (canvas.width !== cw || canvas.height !== ch)) {
+    canvas.width = cw;
+    canvas.height = ch;
+  }
+}
 
 // ==================================================================
 // ---- Level system: each map in maps/levelN.js registers itself   ----
@@ -1555,6 +1571,19 @@ let mapReady = false;
 const SNAP_RADIUS = 55; // how close a click must be to a build pad
 
 function render() {
+  // Match the backing store to device pixels, then letterbox the 1280x720
+  // world onto it (same centered "contain" box the CSS used to produce, so
+  // canvasPos()/getCanvasContentRect() stay correct).
+  fitCanvas();
+  const dw = canvas.width, dh = canvas.height;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, dw, dh);
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, dw, dh);
+  const vs = Math.min(dw / W, dh / H);
+  const ox = Math.round((dw - W * vs) / 2), oy = Math.round((dh - H * vs) / 2);
+  ctx.setTransform(vs, 0, 0, vs, ox, oy);
+
   ctx.clearRect(0, 0, W, H);
   if (!activeLevel) return;
   if (!mapReady && activeLevel.allArtLoaded()) {

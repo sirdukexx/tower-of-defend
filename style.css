@@ -58,8 +58,9 @@ html, body {
 #game {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: fill;      /* backing store matches this box; world is letterboxed in JS */
   cursor: crosshair;
+  touch-action: none;    /* taps place towers cleanly; no pan/zoom/double-tap delay */
 }
 
 #sidebar {
