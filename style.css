@@ -36,35 +36,36 @@ html, body {
   color: #ffe0b0; text-shadow: 2px 2px 0 #000;
 }
 
-/* pixel-art framed stat badges (skull/coin/heart look) */
-.stats { display: flex; gap: 10px; }
+/* stat readouts on the kit's translucent rounded panel (interface_game/table) */
+.stats { display: flex; gap: 8px; }
 .stat {
-  display: flex; align-items: center; gap: 6px;
+  display: flex; align-items: center; gap: 7px;
   font-family: var(--pixel); font-weight: 700; font-size: 14px;
-  color: #3a2410; padding: 5px 10px 4px;
-  background: linear-gradient(#f0d3a0, #d9ab6e);
-  border: 3px solid #6e3f1e; border-radius: 7px;
-  box-shadow: inset 0 2px 0 #fbe8c4, inset 0 -3px 0 #b07c40, 0 2px 0 #000;
-  text-shadow: 1px 1px 0 #f6e2bd;
+  color: #fff3d6; padding: 5px 12px 4px;
+  background: url('assets/ui/interface_game/table.png') center / 100% 100% no-repeat;
+  text-shadow: 0 2px 0 rgba(0,0,0,0.6);
 }
-.stat img { width: 20px; height: 20px; object-fit: contain; }
+.stat img { width: 22px; height: 22px; object-fit: contain; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.5)); }
 
-/* pixel-art buttons (chunky beveled frames) */
+/* wood + riveted-steel image buttons from the UI kit */
 .actions { display: flex; gap: 8px; align-items: center; }
-.btn-primary, .btn-secondary {
-  cursor: pointer;
-  font-family: var(--pixel); font-weight: 700; font-size: 13px;
-  min-width: 40px; min-height: 38px; padding: 6px 12px;
-  border: 3px solid #4a2a10; border-radius: 7px;
-  display: inline-flex; align-items: center; justify-content: center;
-  box-shadow: inset 0 2px 0 rgba(255,255,255,0.4), inset 0 -3px 0 rgba(0,0,0,0.25), 0 2px 0 #000;
+.ibtn {
+  width: 44px; height: 44px; padding: 0;
+  border: none; cursor: pointer;
+  background: transparent center / contain no-repeat;
+  font-family: var(--pixel); font-weight: 700; font-size: 12px;
+  color: #fff; text-shadow: 0 2px 2px #000, 0 0 4px #000;
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,0.45));
+  transition: transform 0.08s;
 }
-.btn-primary { background: linear-gradient(#ffd06a, #f2a52e); color: #4a2600; text-shadow: 1px 1px 0 #ffe6a8; }
-.btn-primary:hover { background: linear-gradient(#ffdc86, #ffb648); }
-.btn-primary:disabled { filter: grayscale(0.5) brightness(0.82); cursor: not-allowed; opacity: 0.75; }
-.btn-secondary { background: linear-gradient(#caa06a, #a2703c); color: #2e1a08; text-shadow: 1px 1px 0 #e5c79a; }
-.btn-secondary:hover { background: linear-gradient(#d9b078, #b57f46); }
-.btn-secondary img { width: 16px; height: 16px; vertical-align: middle; }
+.ibtn:hover { transform: scale(1.07); }
+.ibtn:active { transform: scale(0.96); }
+.ibtn:disabled { filter: grayscale(0.9) brightness(0.7); cursor: not-allowed; transform: none; }
+#startWaveBtn { background-image: url('assets/ui/interface_game/button_start.png'); }
+#changeMapBtn { background-image: url('assets/ui/win/button_menu.png'); }
+#speedBtn { background-image: url('assets/ui/interface_game/button_quick.png'); }
+#pauseBtn { background-image: url('assets/ui/interface_game/button_pause.png'); }
+#pauseBtn.on { filter: drop-shadow(0 0 8px #ffd54a) brightness(1.15); }
 
 #playfield {
   grid-area: playfield;
@@ -102,36 +103,36 @@ html, body {
   color: #ffe0b0; text-shadow: 2px 2px 0 #000;
 }
 
-/* salmon pixel-art tower cards: name on top, portrait, cost badge bottom-left */
+/* tower cards: the kit's riveted-steel wooden squares (levels/btton_empty) */
 .tower-buy {
   position: relative;
-  display: flex; flex-direction: column; align-items: center; gap: 2px;
-  background: linear-gradient(#eba79a, #d98577);
-  border: 3px solid #7e3f34; border-radius: 8px;
-  padding: 6px 4px 8px;
-  cursor: pointer; transition: filter 0.1s;
-  box-shadow: inset 0 2px 0 #f6cabf, inset 0 -3px 0 #b96b5c, 0 2px 0 #000;
+  aspect-ratio: 176 / 175;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: url('assets/ui/levels/btton_empty.png') center / 100% 100% no-repeat;
+  border: none; padding: 14% 12% 12%;
+  cursor: pointer;
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,0.4));
+  transition: transform 0.08s;
 }
-.tower-buy:hover { filter: brightness(1.06); }
+.tower-buy:hover { transform: scale(1.05); }
 .tower-buy.selected {
-  border-color: #ffd54a;
-  box-shadow: inset 0 2px 0 #f6cabf, inset 0 -3px 0 #b96b5c, 0 0 0 2px #ffd54a, 0 0 10px #ffd54a99;
+  filter: drop-shadow(0 0 7px #ffd54a) drop-shadow(0 0 3px #ffd54a) brightness(1.1);
 }
 .tower-buy img {
-  width: 46px; height: 46px; object-fit: contain;
-  filter: drop-shadow(0 2px 1px rgba(0,0,0,0.35));
+  width: 62%; height: auto; max-height: 58%; object-fit: contain;
+  filter: drop-shadow(0 2px 1px rgba(0,0,0,0.45));
 }
-.tb-info { order: -1; text-align: center; line-height: 1; }
+.tb-info { order: -1; text-align: center; line-height: 1; margin-bottom: 2px; }
 .tb-info b {
-  font-family: var(--pixel); font-weight: 700; font-size: 10px; letter-spacing: 0.5px;
-  color: #3a1a12; text-transform: uppercase; text-shadow: 1px 1px 0 #f2b6a8;
+  font-family: var(--pixel); font-weight: 700; font-size: 9px; letter-spacing: 0.5px;
+  color: #ffe6b8; text-transform: uppercase; text-shadow: 0 2px 0 #000;
 }
 .tb-info span { display: none; }   /* drop Thai description in the card grid */
 .tb-cost {
-  position: absolute; left: 4px; bottom: 3px;
+  position: absolute; left: 9%; bottom: 7%;
   font-family: var(--pixel); font-weight: 700; font-size: 10px;
-  color: #ffe08a; background: #2c1108;
-  border: 2px solid #5a2418; border-radius: 5px; padding: 1px 4px;
+  color: #ffe08a; background: #201008e0;
+  border: 2px solid #6b4a24; border-radius: 5px; padding: 1px 4px;
   text-shadow: 1px 1px 0 #000;
 }
 .hint {
@@ -142,23 +143,32 @@ html, body {
 
 #towerPanel {
   position: absolute;
-  background: #241708ee;
-  border: 2px solid #ffb238;
-  border-radius: 8px;
-  padding: 10px;
+  background: url('assets/ui/interface_game/table.png') center / 100% 100% no-repeat;
+  border: none;
+  border-radius: 10px;
+  padding: 12px;
   font-size: 13px;
-  min-width: 170px;
+  min-width: 175px;
   z-index: 5;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.45));
 }
 #towerPanel.hidden { display: none; }
-#towerPanelInfo { margin-bottom: 8px; line-height: 1.5; }
-#towerPanelActions { display: flex; gap: 6px; }
+#towerPanelInfo { margin-bottom: 8px; line-height: 1.5; color: #f4e6c8; }
+#towerPanelActions { display: flex; gap: 6px; align-items: center; }
 #towerPanelActions button {
-  flex: 1; cursor: pointer; border: 1px solid #6b4a24; border-radius: 5px;
-  padding: 5px; background: #4a3418; color: #f4e6c8; font-size: 12px;
+  flex: 1; cursor: pointer; border: 2px solid #2c1a0a; border-radius: 6px;
+  padding: 6px 5px; font-size: 12px; font-weight: bold;
+  background: linear-gradient(#8a5f33, #5f3f1c); color: #ffe9c2;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -2px 0 rgba(0,0,0,0.3);
+  text-shadow: 0 1px 0 #000;
 }
-#towerPanelActions button:hover { background: #5f4520; }
+#towerPanelActions button:hover { filter: brightness(1.12); }
 #upgradeBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+#closeTowerPanel {
+  flex: 0 0 26px !important; width: 26px; height: 26px; padding: 0 !important;
+  background: url('assets/ui/upgrade/button_close.png') center / contain no-repeat !important;
+  border: none !important; box-shadow: none !important;
+}
 
 #toast {
   position: absolute;
@@ -174,13 +184,32 @@ html, body {
   display: flex; align-items: center; justify-content: center; z-index: 20;
 }
 #overlay.hidden { display: none; }
+/* win/failed: the kit's dark wooden table with steel corner braces; the
+   YOU WIN / FAILED banner header pokes out over its top edge */
 #overlayBox {
-  background: #241708; border: 3px solid #ffb238; border-radius: 12px;
-  padding: 24px 36px; text-align: center; max-width: 380px;
+  background: url('assets/ui/win/table.png') center / 100% 100% no-repeat;
+  border: none; border-radius: 0;
+  width: min(340px, 88vw);
+  padding: 30px 34px 26px; text-align: center;
+  filter: drop-shadow(0 6px 14px rgba(0,0,0,0.5));
 }
-#overlayHeader { max-width: 260px; margin-bottom: 8px; }
-#overlayTitle { color: #ffd876; margin: 6px 0; }
-#overlaySub { color: #d8c19a; margin-bottom: 16px; }
+#overlayHeader {
+  max-width: 230px; width: 72%;
+  margin: -58px auto 0; display: block;
+  filter: drop-shadow(0 3px 3px rgba(0,0,0,0.4));
+}
+#overlayStars { width: 74%; margin: 6px auto 0; display: block; }
+#overlayStars.hidden { display: none; }
+#overlayTitle {
+  color: #ffd876; margin: 8px 0 4px;
+  font-family: var(--pixel); letter-spacing: 1px; text-shadow: 0 2px 0 #000;
+}
+#overlaySub { color: #e6d3ac; margin: 0 0 14px; font-size: 14px; }
+#overlayActions { display: flex; justify-content: center; gap: 14px; }
+#overlayActions .ibtn { width: 58px; height: 58px; }
+#overlayBtn { background-image: url('assets/ui/win/button_menu.png'); }
+#overlayRetryBtn { background-image: url('assets/ui/failed/button_restart.png'); }
+#overlayNextBtn { background-image: url('assets/ui/win/button_right.png'); }
 
 #levelSelect {
   position: fixed; inset: 0; background: #10161ecc;
@@ -329,24 +358,19 @@ html, body {
     border-bottom: 1px solid #6b4a24;
   }
   .brand { font-size: 11px; letter-spacing: 0; }
-  .stats { gap: 8px; }
-  .stat { font-size: 11px; gap: 4px; padding: 3px 7px 2px; border-width: 2px; }
-  .stat img { width: 15px; height: 15px; }
+  .stats { gap: 6px; }
+  .stat { font-size: 11px; gap: 4px; padding: 3px 9px 2px; }
+  .stat img { width: 16px; height: 16px; }
   .actions { gap: 5px; }
-  .btn-primary, .btn-secondary {
-    padding: 3px 8px; font-size: 11px; min-height: 30px; min-width: 32px; border-width: 2px;
-  }
-  .btn-secondary img { width: 13px; height: 13px; }
+  .ibtn { width: 36px; height: 36px; font-size: 10px; }
 
   #playfield { grid-area: playfield; }
 
   /* Narrow 2-col shop dock; push its cards below the floating HUD */
-  #sidebar { grid-area: sidebar; padding: 6px; padding-top: 42px; gap: 7px; }
+  #sidebar { grid-area: sidebar; padding: 6px; padding-top: 46px; gap: 7px; }
   #sidebar h3 { display: none; }
   .hint { display: none; }
-  .tower-buy { padding: 4px 3px 6px; }
-  .tower-buy img { width: 38px; height: 38px; }
-  .tb-info b { font-size: 9px; }
+  .tb-info b { font-size: 8px; }
   .tb-cost { font-size: 9px; }
 }
 
@@ -372,8 +396,7 @@ html, body {
   .stat { font-size: 13px; gap: 4px; }
   .stat img { width: 20px; height: 20px; }
   .actions { gap: 5px; }
-  .btn-primary, .btn-secondary { padding: 6px 9px; font-size: 12px; }
-  .btn-secondary img { width: 15px; height: 15px; }
+  .ibtn { width: 40px; height: 40px; }
 
   /* Shop: horizontal thumb-scrollable strip of pixel cards beneath the board */
   #sidebar {

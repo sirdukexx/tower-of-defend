@@ -15,15 +15,15 @@
   <header id="topbar">
     <div class="brand">🏰 TOWER OF DEFEND</div>
     <div class="stats">
-      <div class="stat"><img src="assets/gui/ico_3.png" alt="gold"><span id="goldVal">0</span></div>
-      <div class="stat"><img src="assets/gui/heart.png" alt="lives"><span id="livesVal">0</span></div>
-      <div class="stat">Wave <span id="waveVal">0</span>/<span id="waveMax">10</span></div>
+      <div class="stat"><img src="assets/ui/interface_game/je.png" alt="gold"><span id="goldVal">0</span></div>
+      <div class="stat"><img src="assets/ui/interface_game/heart.png" alt="lives"><span id="livesVal">0</span></div>
+      <div class="stat"><img src="assets/ui/interface_game/skull.png" alt="wave"><span><span id="waveVal">0</span>/<span id="waveMax">10</span></span></div>
     </div>
     <div class="actions">
-      <button id="startWaveBtn" class="btn-primary" title="เริ่มเวฟ">▶</button>
-      <button id="changeMapBtn" class="btn-secondary" title="เปลี่ยนแมพ">🗺</button>
-      <button id="speedBtn" class="btn-secondary">1x</button>
-      <button id="pauseBtn" class="btn-secondary"><img src="assets/gui/button_pause.png" alt="pause"></button>
+      <button id="startWaveBtn" class="ibtn" title="เริ่มเวฟ"></button>
+      <button id="changeMapBtn" class="ibtn" title="แผนที่ด่าน"></button>
+      <button id="speedBtn" class="ibtn" title="ความเร็วเกม">1x</button>
+      <button id="pauseBtn" class="ibtn" title="หยุดพัก"></button>
     </div>
   </header>
 
@@ -35,7 +35,7 @@
       <div id="towerPanelActions">
         <button id="upgradeBtn">⬆ อัพเกรด</button>
         <button id="sellBtn">💰 ขาย</button>
-        <button id="closeTowerPanel">✕</button>
+        <button id="closeTowerPanel" title="ปิด"></button>
       </div>
     </div>
 
@@ -127,9 +127,14 @@
 <div id="overlay" class="hidden">
   <div id="overlayBox">
     <img id="overlayHeader" src="">
+    <img id="overlayStars" src="" class="hidden" alt="stars">
     <h2 id="overlayTitle"></h2>
     <p id="overlaySub"></p>
-    <button id="overlayBtn" class="btn-primary">เลือกแมพใหม่</button>
+    <div id="overlayActions">
+      <button id="overlayRetryBtn" class="ibtn hidden" title="เล่นด่านนี้อีกครั้ง"></button>
+      <button id="overlayBtn" class="ibtn" title="กลับไปแผนที่ด่าน"></button>
+      <button id="overlayNextBtn" class="ibtn hidden" title="ด่านถัดไป"></button>
+    </div>
   </div>
 </div>
 

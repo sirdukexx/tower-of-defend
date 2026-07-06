@@ -416,6 +416,9 @@ const overlayHeader = document.getElementById('overlayHeader');
 const overlayTitle = document.getElementById('overlayTitle');
 const overlaySub = document.getElementById('overlaySub');
 const overlayBtn = document.getElementById('overlayBtn');
+const overlayStars = document.getElementById('overlayStars');
+const overlayRetryBtn = document.getElementById('overlayRetryBtn');
+const overlayNextBtn = document.getElementById('overlayNextBtn');
 
 waveMaxEl.textContent = state.waveMax;
 
@@ -1371,6 +1374,7 @@ speedBtn.addEventListener('click', () => {
 
 pauseBtn.addEventListener('click', () => {
   state.paused = !state.paused;
+  pauseBtn.classList.toggle('on', state.paused);
 });
 
 // ---- Canvas interaction ----
@@ -1503,18 +1507,35 @@ function triggerGameOver(won) {
   if (state.gameOver) return;
   state.gameOver = true;
   state.running = false;
-  overlayHeader.src = won ? 'assets/gui/header_win.png' : 'assets/gui/header_failed.png';
+  overlayHeader.src = won ? 'assets/ui/win/header_win.png' : 'assets/ui/failed/header_failed.png';
   overlayTitle.textContent = won ? 'ชนะแล้ว!' : 'พ่ายแพ้!';
   if (won) {
     const stars = starsForLives(state.lives);
     saveStars(activeLevel.id, stars);
     renderLevelList(); // refresh locks/stars so the map is current when reopened
-    overlaySub.textContent = `คุณป้องกันฐานสำเร็จครบ ${state.waveMax} เวฟ · ได้ ${stars}/3 ดาว`;
+    overlaySub.textContent = `คุณป้องกันฐานสำเร็จครบ ${state.waveMax} เวฟ`;
+    overlayStars.src = `assets/ui/win/star_${stars + 1}.png`;
+    overlayStars.classList.remove('hidden');
+    // "next level" only when there IS a next one (it just got unlocked)
+    const idx = (window.LEVELS || []).indexOf(activeLevel);
+    overlayNextBtn.classList.toggle('hidden', idx < 0 || idx + 1 >= window.LEVELS.length);
+    overlayRetryBtn.classList.add('hidden');
   } else {
     overlaySub.textContent = `คุณเอาชีวิตรอดถึงเวฟที่ ${state.wave}`;
+    overlayStars.classList.add('hidden');
+    overlayNextBtn.classList.add('hidden');
+    overlayRetryBtn.classList.remove('hidden');
   }
   overlay.classList.remove('hidden');
 }
+overlayRetryBtn.addEventListener('click', () => {
+  if (activeLevel) selectLevel(activeLevel);
+});
+overlayNextBtn.addEventListener('click', () => {
+  const idx = (window.LEVELS || []).indexOf(activeLevel);
+  const next = window.LEVELS && window.LEVELS[idx + 1];
+  if (next) selectLevel(next);
+});
 overlayBtn.addEventListener('click', () => {
   overlay.classList.add('hidden');
   activeLevel = null;
@@ -1815,6 +1836,7 @@ function selectLevel(level) {
   state.gameOver = false;
   speedBtn.textContent = '1x';
   startWaveBtn.disabled = false;
+  pauseBtn.classList.remove('on');
   document.querySelectorAll('.tower-buy').forEach(e => e.classList.remove('selected'));
   deselectTower();
   overlay.classList.add('hidden');
