@@ -1669,45 +1669,56 @@ function saveStars(id, stars) {
 }
 function starsForLives(lives) { return lives >= 16 ? 3 : lives >= 8 ? 2 : 1; }
 
+// The world-map background art (assets/worldmap/LevelAreaFull.png, 1481x2962)
+// has a dashed trail drawn on it, snaking bottom-left -> top-right. These are
+// its corner waypoints in % of the image (x of width, y of height), traced
+// from the art. Level nodes are spread evenly (by on-image arc length) along
+// this polyline so they sit on the painted trail at any display size.
+const WM_IMG_W = 1481, WM_IMG_H = 2962;
+const WM_TRAIL = [
+  [22.0, 88.5], [83.5, 88.5], [84.5, 74.5], [19.5, 70.8], [18.0, 55.5],
+  [77.0, 53.0], [86.5, 51.0], [86.5, 38.5], [24.0, 37.0], [16.0, 35.0],
+  [16.0, 25.5], [45.0, 24.3], [84.0, 21.6],
+];
+function trailPositions(n) {
+  const pts = WM_TRAIL.map(([x, y]) => [x * WM_IMG_W / 100, y * WM_IMG_H / 100]);
+  const segs = [];
+  let total = 0;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const L = Math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]);
+    segs.push(L); total += L;
+  }
+  const out = [];
+  for (let k = 0; k < n; k++) {
+    let d = n === 1 ? 0 : total * k / (n - 1);
+    let i = 0;
+    while (i < segs.length - 1 && d > segs[i]) { d -= segs[i]; i++; }
+    const t = segs[i] ? d / segs[i] : 0;
+    const x = pts[i][0] + (pts[i + 1][0] - pts[i][0]) * t;
+    const y = pts[i][1] + (pts[i + 1][1] - pts[i][1]) * t;
+    out.push({ x: x / WM_IMG_W * 100, y: y / WM_IMG_H * 100 });
+  }
+  return out;
+}
+
 function renderLevelList() {
   const levels = window.LEVELS || [];
   const progress = loadProgress();
-  levelList.innerHTML = '';
+  levelList.innerHTML = '<span class="wm-title">WORLD MAP</span>';
 
-  // serpentine node layout, bottom -> top
-  const SPACING = 128, MARGIN = 96;
-  const mapH = MARGIN * 2 + SPACING * Math.max(0, levels.length - 1);
-  levelList.style.height = mapH + 'px';
-  const XS = [24, 50, 76, 50]; // % across the map, repeating zigzag
-  const pos = levels.map((_, i) => ({ x: XS[i % 4], y: mapH - MARGIN - i * SPACING }));
-
-  // dotted trail between nodes (plain divs in %/px coords scale cleanly,
-  // no SVG viewBox distortion)
-  for (let i = 0; i < levels.length - 1; i++) {
-    const a = pos[i], b = pos[i + 1];
-    const walked = (progress[levels[i].id] || 0) > 0;
-    for (let k = 1; k <= 5; k++) {
-      const t = k / 6;
-      const dot = document.createElement('div');
-      dot.className = 'wm-dot' + (walked ? ' done' : '');
-      dot.style.left = (a.x + (b.x - a.x) * t) + '%';
-      dot.style.top = (a.y + (b.y - a.y) * t) + 'px';
-      levelList.appendChild(dot);
-    }
-  }
-
+  const pos = trailPositions(levels.length);
   let activeNode = null;
   levels.forEach((level, i) => {
     const stars = progress[level.id] || 0;
     const unlocked = i === 0 || (progress[levels[i - 1].id] || 0) > 0;
+    const state = !unlocked ? 'locked' : stars > 0 ? 'done s' + stars : 'active';
     const node = document.createElement('button');
-    node.className = 'wm-node ' + (!unlocked ? 'locked' : stars > 0 ? 'done' : 'active');
+    node.className = 'wm-node ' + state;
     node.style.left = pos[i].x + '%';
-    node.style.top = pos[i].y + 'px';
-    node.title = level.desc;
+    node.style.top = pos[i].y + '%';
+    node.title = level.desc + (stars ? ` · ${stars}/3 ดาว` : '');
     node.innerHTML =
-      `<span class="wm-num">${unlocked ? i + 1 : '🔒'}</span>` +
-      `<img class="wm-stars" src="assets/gui/star_${stars + 1}.png" alt="${stars}/3 ดาว">` +
+      (unlocked ? `<span class="wm-num">${i + 1}</span>` : '') +
       `<span class="wm-name">${level.name}</span>`;
     if (unlocked) node.addEventListener('click', () => selectLevel(level));
     else node.disabled = true;
