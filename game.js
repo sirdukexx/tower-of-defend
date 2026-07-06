@@ -1690,6 +1690,11 @@ const WM_TRAIL = [
 const WM_CROP_TOP = 570;                       // middle slab = orig y 570..2962
 const WM_SLAB_H = WM_IMG_H - WM_CROP_TOP;      // 2392
 function wmVariant(n) {
+  // preview override: open index.html?worldmap=2 (or =3) to see the
+  // extended maps before the game actually has that many levels
+  const forced = new URLSearchParams(location.search).get('worldmap');
+  if (forced === '2') n = Math.max(n, 23);
+  else if (forced === '3') n = Math.max(n, 45);
   // ~22 nodes per trail keeps neighbours a comfortable tap apart
   if (n <= 22) return {
     img: 'assets/worldmap/LevelAreaFull.png',
