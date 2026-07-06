@@ -70,7 +70,12 @@ html, body {
 #playfield {
   grid-area: playfield;
   position: relative;
-  background: #000;
+  /* themed surround for the letterboxed board (no black bars):
+     dark wood with a soft vignette pulling focus to the map */
+  background:
+    radial-gradient(ellipse at center, rgba(0, 0, 0, 0) 52%, rgba(0, 0, 0, 0.5) 100%),
+    repeating-linear-gradient(105deg, rgba(255, 216, 118, 0.028) 0 3px, rgba(0, 0, 0, 0) 3px 14px),
+    linear-gradient(#36240f, #1c1106);
   display: flex;
   align-items: center;
   justify-content: center;

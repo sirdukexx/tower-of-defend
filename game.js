@@ -1626,9 +1626,9 @@ function render() {
   fitCanvas();
   const dw = canvas.width, dh = canvas.height;
   ctx.setTransform(1, 0, 0, 1, 0, 0);
+  // leave the letterbox transparent so #playfield's themed wood background
+  // shows around the board instead of black bars
   ctx.clearRect(0, 0, dw, dh);
-  ctx.fillStyle = '#000';
-  ctx.fillRect(0, 0, dw, dh);
   const vs = Math.min(dw / W, dh / H);
   const ox = Math.round((dw - W * vs) / 2), oy = Math.round((dh - H * vs) / 2);
   ctx.setTransform(vs, 0, 0, vs, ox, oy);
