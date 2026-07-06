@@ -195,21 +195,42 @@
   </div>
 
   <div id="setWin" class="uiwin hidden">
+    <img class="set-rope rope-l" src="assets/ui/settings/rope_big.png" alt="">
+    <img class="set-rope rope-r" src="assets/ui/settings/rope_big.png" alt="">
     <img class="uiwin-header" src="assets/ui/settings/header_settings.png" alt="ตั้งค่า">
-    <div class="set-row">
-      <span>เสียงเอฟเฟกต์</span>
-      <button id="setSoundBtn" class="onoff"></button>
-    </div>
-    <div class="set-row">
-      <span>ระดับเสียง</span>
-      <div class="vol-ctl">
-        <button id="volMinus" class="volbtn" style="background-image:url('assets/ui/settings/button_minus.png')" title="ลดเสียง"></button>
-        <div id="volBarBg"><div id="volBarFill"></div></div>
-        <button id="volPlus" class="volbtn" style="background-image:url('assets/ui/settings/button_plus.png')" title="เพิ่มเสียง"></button>
+    <div id="setCols">
+      <div class="set-panel" id="setLeft">
+        <div class="set-row"><span>Music</span><button id="setMusicBtn" class="onoff" title="เพลงประกอบ"></button></div>
+        <div class="set-row"><span>Sound</span><button id="setSoundBtn" class="onoff" title="เสียงเอฟเฟกต์"></button></div>
+        <div class="set-row"><span>Vibration</span><button id="setVibBtn" class="onoff" title="สั่นเมื่อเสียหัวใจ (มือถือ)"></button></div>
+        <div class="set-row"><span>Notification</span><button id="setNotiBtn" class="onoff" title="ข้อความแจ้งเตือนในเกม"></button></div>
+        <div class="set-quality">
+          <span>Graphics quality</span>
+          <div class="vol-ctl">
+            <button id="gfxMinus" class="volbtn" style="background-image:url('assets/ui/settings/button_minus.png')" title="ลดความละเอียด"></button>
+            <div id="volBarBg"><div id="volBarFill"></div></div>
+            <button id="gfxPlus" class="volbtn" style="background-image:url('assets/ui/settings/button_plus.png')" title="เพิ่มความละเอียด"></button>
+          </div>
+        </div>
+        <button id="resetProgressBtn">ล้างความคืบหน้าทั้งหมด</button>
       </div>
-    </div>
-    <div class="set-row">
-      <button id="resetProgressBtn">ล้างความคืบหน้าทั้งหมด</button>
+      <div class="set-panel" id="setRight">
+        <div class="rate-title">Please rate<br>this game</div>
+        <div class="rate-grid">
+          <a class="rate-btn" target="_blank" rel="noopener"
+             href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fsirdukexx.github.io%2Ftower-of-defend%2F"
+             style="background-image:url('assets/ui/settings/button__facebook.png')" title="แชร์บน Facebook"></a>
+          <a class="rate-btn" target="_blank" rel="noopener"
+             href="https://twitter.com/intent/tweet?url=https%3A%2F%2Fsirdukexx.github.io%2Ftower-of-defend%2F&text=Tower%20of%20Defend"
+             style="background-image:url('assets/ui/settings/button_twitter.png')" title="แชร์บน X/Twitter"></a>
+          <a class="rate-btn" target="_blank" rel="noopener"
+             href="https://github.com/sirdukexx/tower-of-defend"
+             style="background-image:url('assets/ui/settings/button_google.png')" title="เปิดหน้าโปรเจกต์"></a>
+          <a class="rate-btn" target="_blank" rel="noopener"
+             href="https://vk.com/share.php?url=https%3A%2F%2Fsirdukexx.github.io%2Ftower-of-defend%2F"
+             style="background-image:url('assets/ui/settings/button_vk.png')" title="แชร์บน VK"></a>
+        </div>
+      </div>
     </div>
     <button class="uiwin-close" data-close title="ปิด"></button>
   </div>

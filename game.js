@@ -10,7 +10,10 @@ const W = canvas.width, H = canvas.height;   // fixed 1280x720 WORLD size
 // native resolution keeps static art pixel-stable and sharper. The 1280x720
 // world is letterboxed onto this buffer by a base transform set in render().
 function fitCanvas() {
-  const dpr = Math.min(window.devicePixelRatio || 1, 3); // cap cost on 3x+ screens
+  // cap by the Graphics quality setting (1..3); typeof guard: settings is
+  // declared later in the file, but frames only run after full parse
+  const cap = (typeof settings !== 'undefined' && settings.gfx) || 3;
+  const dpr = Math.min(window.devicePixelRatio || 1, cap);
   const cw = Math.round(canvas.clientWidth * dpr);
   const ch = Math.round(canvas.clientHeight * dpr);
   if (cw > 0 && ch > 0 && (canvas.width !== cw || canvas.height !== ch)) {
@@ -423,6 +426,7 @@ const overlayNextBtn = document.getElementById('overlayNextBtn');
 waveMaxEl.textContent = state.waveMax;
 
 function showToast(msg) {
+  try { if (!settings.noti) return; } catch {} // Notification toggle (settings declared later)
   toast.textContent = msg;
   toast.classList.add('show');
   clearTimeout(showToast._t);
@@ -512,6 +516,7 @@ class Enemy {
     if (this.animTimer > 0.06) { this.animTimer = 0; this.animFrame = (this.animFrame + 1) % this.def.walk.length; }
     if (this.dist >= lane.total) {
       state.lives -= this.def.dmg;
+      try { if (settings.vib && navigator.vibrate) navigator.vibrate(60); } catch {}
       this.removeMe = true;
       updateHud();
       if (state.lives <= 0) triggerGameOver(false);
@@ -1546,6 +1551,7 @@ function triggerGameOver(won) {
     overlayNextBtn.classList.add('hidden');
     overlayRetryBtn.classList.remove('hidden');
     sfx('lose');
+    try { if (settings.vib && navigator.vibrate) navigator.vibrate([120, 60, 200]); } catch {}
   }
   overlay.classList.remove('hidden');
 }
@@ -1897,7 +1903,9 @@ function store(key, fallback) {
 function save(key, val) {
   try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
 }
-const settings = Object.assign({ sound: true, vol: 0.7 }, store('tod.settings', {}));
+const settings = Object.assign(
+  { sound: true, music: false, vib: true, noti: true, gfx: 3, vol: 0.7 },
+  store('tod.settings', {}));
 const stats = Object.assign({ kills: 0, towersBuilt: {}, perfectWin: false }, store('tod.stats', {}));
 let crystals = store('tod.crystals', 0);
 let boosts = Object.assign({ gold: 0, lives: 0 }, store('tod.boosts', {}));
@@ -1982,31 +1990,85 @@ document.querySelectorAll('.diff-btn').forEach(btn => {
   });
 });
 
-// ---- settings window ----
-const setSoundBtn = document.getElementById('setSoundBtn');
+// ---- ambient music: a soft procedural chord pad (no audio assets) ----
+let musicNodes = null, musicTimer = null, musicChord = 0;
+const MUSIC_CHORDS = [[262, 330, 392], [220, 262, 330], [175, 220, 262], [196, 247, 294]]; // C Am F G
+function startMusic() {
+  if (musicNodes || !settings.music) return;
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const master = audioCtx.createGain();
+    master.gain.value = 0.05;
+    const lp = audioCtx.createBiquadFilter();
+    lp.type = 'lowpass'; lp.frequency.value = 900;
+    lp.connect(master); master.connect(audioCtx.destination);
+    const oscs = [0, 1, 2].map(() => {
+      const o = audioCtx.createOscillator(); o.type = 'triangle';
+      const g = audioCtx.createGain(); g.gain.value = 0.33;
+      o.connect(g); g.connect(lp); o.start();
+      return o;
+    });
+    musicNodes = { oscs, master };
+    const setChord = () => {
+      const ch = MUSIC_CHORDS[musicChord++ % MUSIC_CHORDS.length];
+      const t = audioCtx.currentTime;
+      oscs.forEach((o, i) => o.frequency.setTargetAtTime(ch[i], t, 0.6));
+    };
+    setChord();
+    musicTimer = setInterval(setChord, 3200);
+  } catch {}
+}
+function stopMusic() {
+  if (musicTimer) { clearInterval(musicTimer); musicTimer = null; }
+  if (musicNodes) {
+    try {
+      musicNodes.master.gain.setTargetAtTime(0, audioCtx.currentTime, 0.25);
+      const n = musicNodes;
+      setTimeout(() => n.oscs.forEach(o => { try { o.stop(); } catch {} }), 700);
+    } catch {}
+    musicNodes = null;
+  }
+}
+// browsers block audio before a user gesture: if music was left on, start
+// it on the first tap/click anywhere
+window.addEventListener('pointerdown', () => { if (settings.music) startMusic(); }, { once: true });
+
+// ---- settings window (ref layout: 4 pills + graphics quality bar) ----
 const volBarFill = document.getElementById('volBarFill');
 const soundBtn = document.getElementById('soundBtn');
 function renderSettings() {
-  setSoundBtn.classList.toggle('off', !settings.sound);
-  setSoundBtn.textContent = settings.sound ? 'ON' : 'OFF';
-  volBarFill.style.width = Math.round(settings.vol * 100) + '%';
+  document.getElementById('setMusicBtn').classList.toggle('off', !settings.music);
+  document.getElementById('setSoundBtn').classList.toggle('off', !settings.sound);
+  document.getElementById('setVibBtn').classList.toggle('off', !settings.vib);
+  document.getElementById('setNotiBtn').classList.toggle('off', !settings.noti);
+  volBarFill.style.width = Math.round((settings.gfx / 3) * 100) + '%';
   soundBtn.style.backgroundImage =
     `url('assets/ui/menu/${settings.sound ? 'button_sound' : 'button_sound_off'}.png')`;
 }
-setSoundBtn.addEventListener('click', () => {
-  settings.sound = !settings.sound; save('tod.settings', settings);
-  renderSettings(); sfx('click');
-});
+function bindToggle(id, key, onChange) {
+  document.getElementById(id).addEventListener('click', () => {
+    settings[key] = !settings[key];
+    save('tod.settings', settings);
+    renderSettings(); sfx('click');
+    if (onChange) onChange();
+  });
+}
+bindToggle('setMusicBtn', 'music', () => settings.music ? startMusic() : stopMusic());
+bindToggle('setSoundBtn', 'sound');
+bindToggle('setVibBtn', 'vib');
+bindToggle('setNotiBtn', 'noti');
 soundBtn.addEventListener('click', () => {
   settings.sound = !settings.sound; save('tod.settings', settings);
   renderSettings(); sfx('click');
 });
-document.getElementById('volMinus').addEventListener('click', () => {
-  settings.vol = Math.max(0, Math.round((settings.vol - 0.1) * 10) / 10);
+// graphics quality 1..3 = device-pixel-ratio cap used by fitCanvas()
+document.getElementById('gfxMinus').addEventListener('click', () => {
+  settings.gfx = Math.max(1, (settings.gfx || 3) - 1);
   save('tod.settings', settings); renderSettings(); sfx('click');
 });
-document.getElementById('volPlus').addEventListener('click', () => {
-  settings.vol = Math.min(1, Math.round((settings.vol + 0.1) * 10) / 10);
+document.getElementById('gfxPlus').addEventListener('click', () => {
+  settings.gfx = Math.min(3, (settings.gfx || 3) + 1);
   save('tod.settings', settings); renderSettings(); sfx('click');
 });
 const resetBtn = document.getElementById('resetProgressBtn');
