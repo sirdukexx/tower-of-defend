@@ -1680,8 +1680,51 @@ const WM_TRAIL = [
   [77.0, 53.0], [86.5, 51.0], [86.5, 38.5], [24.0, 37.0], [16.0, 35.0],
   [16.0, 25.5], [45.0, 24.3], [84.0, 21.6],
 ];
-function trailPositions(n) {
-  const pts = WM_TRAIL.map(([x, y]) => [x * WM_IMG_W / 100, y * WM_IMG_H / 100]);
+
+// When there are more levels than one map's trail can hold comfortably, the
+// baked extended maps (LevelAreaFull_x2/_x3) are used. Those are composed
+// from the original art: the full map on top, plus 1-2 "middle slab" crops
+// (original y=570..2962, alternately mirrored) stacked below, with dashed
+// connectors drawn between each slab's trail end and the next one's start.
+// The constants here MUST match the bake script's crop/stack layout.
+const WM_CROP_TOP = 570;                       // middle slab = orig y 570..2962
+const WM_SLAB_H = WM_IMG_H - WM_CROP_TOP;      // 2392
+function wmVariant(n) {
+  // ~22 nodes per trail keeps neighbours a comfortable tap apart
+  if (n <= 22) return {
+    img: 'assets/worldmap/LevelAreaFull.png',
+    height: WM_IMG_H,
+    secs: [{ slab: false, flip: false, oy: 0 }],
+  };
+  if (n <= 44) return {
+    img: 'assets/worldmap/LevelAreaFull_x2.png',
+    height: WM_IMG_H + WM_SLAB_H,
+    secs: [ // journey order: bottom section first
+      { slab: true, flip: true, oy: WM_IMG_H },
+      { slab: false, flip: false, oy: 0 },
+    ],
+  };
+  return {
+    img: 'assets/worldmap/LevelAreaFull_x3.png',
+    height: WM_IMG_H + WM_SLAB_H * 2,
+    secs: [
+      { slab: true, flip: false, oy: WM_IMG_H + WM_SLAB_H },
+      { slab: true, flip: true, oy: WM_IMG_H },
+      { slab: false, flip: false, oy: 0 },
+    ],
+  };
+}
+
+function trailPositions(n, variant) {
+  const pts = [];
+  for (const { slab, flip, oy } of variant.secs) {
+    for (const [xp, yp] of WM_TRAIL) {
+      let x = xp * WM_IMG_W / 100, y = yp * WM_IMG_H / 100;
+      if (slab) y -= WM_CROP_TOP;
+      if (flip) x = WM_IMG_W - x;
+      pts.push([x, y + oy]);
+    }
+  }
   const segs = [];
   let total = 0;
   for (let i = 0; i < pts.length - 1; i++) {
@@ -1696,7 +1739,7 @@ function trailPositions(n) {
     const t = segs[i] ? d / segs[i] : 0;
     const x = pts[i][0] + (pts[i + 1][0] - pts[i][0]) * t;
     const y = pts[i][1] + (pts[i + 1][1] - pts[i][1]) * t;
-    out.push({ x: x / WM_IMG_W * 100, y: y / WM_IMG_H * 100 });
+    out.push({ x: x / WM_IMG_W * 100, y: y / variant.height * 100 });
   }
   return out;
 }
@@ -1706,7 +1749,15 @@ function renderLevelList() {
   const progress = loadProgress();
   levelList.innerHTML = '<span class="wm-title">WORLD MAP</span>';
 
-  const pos = trailPositions(levels.length);
+  // pick the map long enough for this many levels and lay nodes on its trail
+  const variant = wmVariant(levels.length);
+  levelList.style.backgroundImage = `url('${variant.img}')`;
+  levelList.style.aspectRatio = `${WM_IMG_W} / ${variant.height}`;
+  // the banner is painted on the top (original) section; keep the title on it
+  levelList.querySelector('.wm-title').style.top =
+    (5.2 * WM_IMG_H / variant.height) + '%';
+
+  const pos = trailPositions(levels.length, variant);
   let activeNode = null;
   levels.forEach((level, i) => {
     const stars = progress[level.id] || 0;
