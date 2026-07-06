@@ -304,6 +304,253 @@ html, body {
 .hidden { display: none !important; }
 
 /* ============================================================
+   Meta screens: boot loader, main menu, modal windows
+   (difficulty / settings / achievements / shop) — UI kit art
+   ============================================================ */
+
+/* ---- boot loading screen ---- */
+#bootScreen {
+  position: fixed; inset: 0; z-index: 200;
+  background: #1a1108;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 28px; transition: opacity 0.5s;
+}
+#bootScreen.gone { opacity: 0; pointer-events: none; }
+
+/* text logo in the kit's orange bubble style (the pack logo is generic art) */
+.game-logo {
+  display: flex; flex-direction: column; align-items: center; line-height: 0.95;
+  font-family: var(--pixel); font-weight: 700; text-align: center;
+  color: #ffd23e;
+  text-shadow:
+    0 2px 0 #c33d0e, 0 -2px 0 #c33d0e, 2px 0 0 #c33d0e, -2px 0 0 #c33d0e,
+    2px 2px 0 #c33d0e, -2px 2px 0 #c33d0e, 2px -2px 0 #c33d0e, -2px -2px 0 #c33d0e,
+    0 6px 10px rgba(0,0,0,0.55);
+  filter: drop-shadow(0 3px 0 #7c2408);
+}
+.game-logo span { font-size: clamp(40px, 9vw, 72px); letter-spacing: 4px; }
+.game-logo .gl-sub { font-size: clamp(24px, 5.4vw, 44px); letter-spacing: 6px; color: #ffe9a8; }
+#bootBarBg {
+  width: min(460px, 76vw); aspect-ratio: 1455 / 91;
+  background: url('assets/ui/load_bar/load_bar_bg.png') center / 100% 100% no-repeat;
+  padding: 0.55% 1.2%;
+}
+#bootBarFill {
+  width: 0%; height: 100%;
+  background: url('assets/ui/load_bar/load_bar_1.png') left center / auto 100% no-repeat;
+  border-radius: 999px; transition: width 0.15s;
+}
+
+/* ---- main menu ---- */
+#mainMenu {
+  position: fixed; inset: 0; z-index: 90;
+  background: url('assets/ui/menu/bg.png') center / cover no-repeat;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+#mainMenu .game-logo { margin-bottom: 5vh; }
+#playBtn {
+  width: min(150px, 24vh); aspect-ratio: 331 / 329;
+  border: none; padding: 0; cursor: pointer;
+  background: url('assets/ui/menu/button_play.png') center / contain no-repeat;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+  transition: transform 0.1s;
+}
+#playBtn:hover { transform: scale(1.06); }
+#playBtn:active { transform: scale(0.97); }
+#menuTopLeft { position: fixed; top: 14px; left: 14px; display: flex; gap: 10px; }
+#menuTopRight { position: fixed; top: 14px; right: 14px; display: flex; gap: 10px; }
+.mbtn {
+  width: 54px; height: 54px; border: none; padding: 0; cursor: pointer;
+  background: transparent center / contain no-repeat;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.5));
+  transition: transform 0.1s;
+  display: flex; align-items: center; justify-content: center;
+}
+.mbtn:hover { transform: scale(1.08); }
+#menuSettingsBtn { background-image: url('assets/ui/menu/button_settings.png'); }
+/* deco buttons: kit frame + overlaid icon */
+.mbtn.deco, .tbtn.deco { background-image: url('assets/ui/levels/btton_empty.png'); }
+.mbtn.deco img { width: 55%; height: 55%; object-fit: contain; }
+
+/* ---- world-map toolbar ---- */
+#wmToolbar {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 8px;
+}
+.tbtn {
+  width: 40px; height: 40px; border: none; padding: 0; cursor: pointer;
+  background: transparent center / contain no-repeat;
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,0.45));
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.1s;
+}
+.tbtn:hover { transform: scale(1.08); }
+.tbtn.deco img { width: 55%; height: 55%; object-fit: contain; }
+.tb-spacer { flex: 1; }
+#wmCrystals {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--pixel); font-weight: 700; font-size: 13px; color: #fff3d6;
+  background: url('assets/ui/interface_game/table.png') center / 100% 100% no-repeat;
+  padding: 6px 12px 5px; text-shadow: 0 2px 0 rgba(0,0,0,0.6);
+}
+#wmCrystals img { width: 18px; height: 18px; object-fit: contain; }
+
+/* ---- modal framework ---- */
+#modalDim {
+  position: fixed; inset: 0; z-index: 120;
+  background: rgba(6, 4, 2, 0.72);
+  display: flex; align-items: center; justify-content: center;
+}
+.uiwin {
+  position: relative;
+  background: url('assets/ui/win/table.png') center / 100% 100% no-repeat;
+  width: min(360px, 90vw);
+  padding: 44px 30px 26px; text-align: center;
+  filter: drop-shadow(0 6px 14px rgba(0,0,0,0.5));
+  color: #f4e6c8;
+  /* NOTE: no overflow clip here — the header banner hangs above the box.
+     Long content scrolls in inner lists (#achList) instead. */
+}
+.uiwin-header {
+  width: 62%; max-width: 230px; display: block;
+  margin: -76px auto 4px;
+  filter: drop-shadow(0 3px 3px rgba(0,0,0,0.4));
+}
+.uiwin-close {
+  position: absolute; top: 8px; right: 8px;
+  width: 34px; height: 34px; border: none; padding: 0; cursor: pointer;
+  background: url('assets/ui/settings/button_close.png') center / contain no-repeat;
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,0.4));
+}
+.uiwin-sub {
+  font-family: var(--pixel); font-weight: 700; font-size: 14px;
+  color: #ffd876; margin: 2px 0 10px; text-shadow: 0 2px 0 #000;
+}
+.uiwin-note { font-size: 12px; color: #d8c19a; margin-top: 10px; }
+
+/* ---- difficulty window ---- */
+.diff-list { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+.diff-btn {
+  width: 74%; aspect-ratio: 326 / 175;
+  border: none; padding: 0; cursor: pointer;
+  background: transparent center / contain no-repeat;
+  filter: drop-shadow(0 3px 3px rgba(0,0,0,0.4));
+  transition: transform 0.1s;
+}
+.diff-btn:hover { transform: scale(1.05); }
+
+/* ---- settings window ---- */
+.set-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; margin: 14px 6px; font-size: 14px; font-weight: bold;
+}
+.onoff {
+  width: 76px; height: 37px; border: none; cursor: pointer;
+  background: url('assets/ui/settings/button_on.png') center / 100% 100% no-repeat;
+  font-family: var(--pixel); font-weight: 700; font-size: 13px; color: #2c4a12;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.4); padding-bottom: 4px;
+}
+.onoff.off {
+  background-image: url('assets/ui/settings/button_off.png');
+  color: #5a1a10;
+}
+.vol-ctl { display: flex; align-items: center; gap: 7px; }
+.volbtn {
+  width: 30px; height: 30px; border: none; padding: 0; cursor: pointer;
+  background: transparent center / contain no-repeat;
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,0.4));
+}
+#volBarBg {
+  width: 110px; aspect-ratio: 315 / 66;
+  background: url('assets/ui/settings/bar_bg.png') center / 100% 100% no-repeat;
+  padding: 3.5% 4.5%;
+}
+#volBarFill {
+  height: 100%; width: 70%;
+  background: url('assets/ui/settings/bar.png') left center / auto 100% no-repeat;
+  border-radius: 999px;
+}
+#resetProgressBtn {
+  flex: 1; cursor: pointer; border: 2px solid #4a1410; border-radius: 7px;
+  padding: 9px; font-size: 13px; font-weight: bold;
+  background: linear-gradient(#a5462e, #7c2d1c); color: #ffe4d6;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -2px 0 rgba(0,0,0,0.3);
+  text-shadow: 0 1px 0 #000;
+}
+#resetProgressBtn:hover { filter: brightness(1.12); }
+
+/* ---- achievements window ---- */
+#achWin { width: min(430px, 92vw); }
+#achList {
+  display: flex; flex-direction: column; gap: 8px;
+  max-height: min(52vh, 420px); overflow-y: auto; padding-right: 4px;
+}
+.ach-row {
+  display: flex; align-items: center; gap: 10px; text-align: left;
+  background: url('assets/ui/achievement/normal_window.png') center / 100% 100% no-repeat;
+  padding: 10px 14px; min-height: 58px;
+  filter: grayscale(0.7) brightness(0.85);
+}
+.ach-row.done { filter: none; }
+.ach-star {
+  flex: 0 0 40px; width: 40px; height: 40px;
+  background: url('assets/ui/achievement/s_window.png') center / contain no-repeat;
+  display: flex; align-items: center; justify-content: center;
+}
+.ach-star img { width: 58%; filter: grayscale(1) brightness(0.7); }
+.ach-row.done .ach-star img { filter: none; }
+.ach-txt { flex: 1; display: flex; flex-direction: column; line-height: 1.25; }
+.ach-txt b { font-size: 13px; color: #ffe6b8; text-shadow: 0 1px 0 #000; }
+.ach-txt small { font-size: 11px; color: #d8c19a; }
+.ach-unlocked { width: 74px; object-fit: contain; }
+
+/* ---- shop window ---- */
+#shopWin { width: min(420px, 92vw); }
+#shopBalance {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--pixel); font-weight: 700; font-size: 15px; color: #fff3d6;
+  background: url('assets/ui/interface_game/table.png') center / 100% 100% no-repeat;
+  padding: 7px 16px 6px; margin: 2px 0 12px;
+  text-shadow: 0 2px 0 rgba(0,0,0,0.6);
+}
+#shopBalance img { width: 20px; height: 20px; object-fit: contain; }
+#shopItems { display: flex; flex-direction: column; gap: 10px; }
+.shop-item {
+  display: grid; grid-template-columns: 52px 1fr auto; align-items: center;
+  gap: 10px; text-align: left; cursor: pointer;
+  background: url('assets/ui/shop/button_empty.png') center / 100% 100% no-repeat;
+  border: none; padding: 12px 18px; min-height: 64px;
+  transition: transform 0.1s;
+}
+.shop-item:hover { transform: scale(1.03); }
+.shop-item img { width: 44px; height: 40px; object-fit: contain; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.4)); }
+.shop-item b { font-size: 13px; color: #ffe6b8; text-shadow: 0 1px 0 #000; }
+.shop-price {
+  font-family: var(--pixel); font-weight: 700; font-size: 12px;
+  color: #9be5ff; text-shadow: 0 1px 0 #000;
+}
+
+/* meta screens on short landscape phones */
+@media (orientation: landscape) and (max-height: 560px) {
+  #mainMenu .game-logo { margin-bottom: 3vh; }
+  .game-logo span { font-size: clamp(30px, 10vh, 44px); }
+  .game-logo .gl-sub { font-size: clamp(18px, 6vh, 28px); }
+  #playBtn { width: min(110px, 26vh); }
+  .mbtn { width: 44px; height: 44px; }
+  .uiwin { padding: 28px 20px 12px; }
+  .uiwin-header { margin-top: -44px; width: 40%; }
+  .uiwin-sub { margin: 0 0 6px; font-size: 12px; }
+  .uiwin-note { margin-top: 6px; font-size: 11px; }
+  .diff-list { gap: 6px; }
+  .diff-btn { width: 37%; }
+  .set-row { margin: 8px 6px; }
+  #achList { max-height: 46vh; }
+  .ach-row { min-height: 48px; padding: 6px 12px; }
+  #achWin, #shopWin { width: min(480px, 92vw); }
+  .shop-item { min-height: 52px; padding: 8px 14px; }
+}
+
+/* ============================================================
    Responsive: mobile landscape & portrait
    Layout/logic untouched — canvasPos() already maps taps
    correctly via object-fit: contain, so touch input works.

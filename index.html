@@ -140,6 +140,14 @@
 
 <div id="levelSelect">
   <div id="levelSelectBox">
+    <div id="wmToolbar">
+      <button id="wmHomeBtn" class="tbtn" title="กลับเมนูหลัก" style="background-image:url('assets/ui/failed/button_left.png')"></button>
+      <span id="wmCrystals"><img src="assets/ui/interface_game/je.png" alt="crystals"><span class="wm-crystal-val">0</span></span>
+      <span class="tb-spacer"></span>
+      <button id="wmShopBtn" class="tbtn deco" title="ร้านค้า"><img src="assets/ui/shop/crystal_1.png" alt=""></button>
+      <button id="wmAchBtn" class="tbtn deco" title="ความสำเร็จ"><img src="assets/ui/achievement/star.png" alt=""></button>
+      <button id="wmSettingsBtn" class="tbtn" title="ตั้งค่า" style="background-image:url('assets/ui/menu/button_settings.png')"></button>
+    </div>
     <div id="levelList"></div>
     <p class="hint">ชนะด่านเพื่อปลดล็อกด่านถัดไป · ยิ่งเหลือพลังชีวิตมาก ยิ่งได้ดาวเยอะ (สูงสุด 3 ดาว)</p>
   </div>
@@ -149,6 +157,90 @@
   <div class="rg-icon">📱↻</div>
   <div class="rg-title">หมุนจอแนวนอน</div>
   <div class="rg-sub">เกมนี้เล่นได้เฉพาะแนวนอนบนมือถือ<br>กรุณาหมุนอุปกรณ์ของคุณ</div>
+</div>
+
+<!-- ===== Boot loading screen ===== -->
+<div id="bootScreen">
+  <div class="game-logo"><span>TOWER</span><span class="gl-sub">OF DEFEND</span></div>
+  <div id="bootBarBg"><div id="bootBarFill"></div></div>
+</div>
+
+<!-- ===== Main menu ===== -->
+<div id="mainMenu" class="hidden">
+  <div class="game-logo"><span>TOWER</span><span class="gl-sub">OF DEFEND</span></div>
+  <button id="playBtn" title="เล่นเกม"></button>
+  <div id="menuTopLeft">
+    <button id="soundBtn" class="mbtn" title="เปิด/ปิดเสียง"></button>
+  </div>
+  <div id="menuTopRight">
+    <button id="menuShopBtn" class="mbtn deco" title="ร้านค้า"><img src="assets/ui/shop/crystal_1.png" alt="shop"></button>
+    <button id="menuAchBtn" class="mbtn deco" title="ความสำเร็จ"><img src="assets/ui/achievement/star.png" alt="achievements"></button>
+    <button id="menuSettingsBtn" class="mbtn" title="ตั้งค่า"></button>
+  </div>
+</div>
+
+<!-- ===== Modal windows (difficulty / settings / achievements / shop) ===== -->
+<div id="modalDim" class="hidden">
+
+  <div id="diffWin" class="uiwin hidden">
+    <img class="uiwin-header" src="assets/ui/difficulty/header_diff.png" alt="เลือกความยาก">
+    <div id="diffName" class="uiwin-sub"></div>
+    <div class="diff-list">
+      <button class="diff-btn" data-diff="easy" style="background-image:url('assets/ui/difficulty/button_easy.png')"></button>
+      <button class="diff-btn" data-diff="normal" style="background-image:url('assets/ui/difficulty/button_normal.png')"></button>
+      <button class="diff-btn" data-diff="hard" style="background-image:url('assets/ui/difficulty/button_hard.png')"></button>
+    </div>
+    <div id="diffHint" class="uiwin-note"></div>
+    <button class="uiwin-close" data-close title="ปิด"></button>
+  </div>
+
+  <div id="setWin" class="uiwin hidden">
+    <img class="uiwin-header" src="assets/ui/settings/header_settings.png" alt="ตั้งค่า">
+    <div class="set-row">
+      <span>เสียงเอฟเฟกต์</span>
+      <button id="setSoundBtn" class="onoff"></button>
+    </div>
+    <div class="set-row">
+      <span>ระดับเสียง</span>
+      <div class="vol-ctl">
+        <button id="volMinus" class="volbtn" style="background-image:url('assets/ui/settings/button_minus.png')" title="ลดเสียง"></button>
+        <div id="volBarBg"><div id="volBarFill"></div></div>
+        <button id="volPlus" class="volbtn" style="background-image:url('assets/ui/settings/button_plus.png')" title="เพิ่มเสียง"></button>
+      </div>
+    </div>
+    <div class="set-row">
+      <button id="resetProgressBtn">ล้างความคืบหน้าทั้งหมด</button>
+    </div>
+    <button class="uiwin-close" data-close title="ปิด"></button>
+  </div>
+
+  <div id="achWin" class="uiwin hidden">
+    <img class="uiwin-header" src="assets/ui/achievement/header_achievement.png" alt="ความสำเร็จ">
+    <div id="achList"></div>
+    <button class="uiwin-close" data-close title="ปิด"></button>
+  </div>
+
+  <div id="shopWin" class="uiwin hidden">
+    <img class="uiwin-header" src="assets/ui/shop/header_shop.png" alt="ร้านค้า">
+    <div id="shopBalance"><img src="assets/ui/interface_game/je.png" alt="crystals"><span id="crystalVal">0</span></div>
+    <div id="shopItems">
+      <button class="shop-item" data-item="gold75">
+        <img src="assets/ui/shop/crystal_1.png" alt="">
+        <b>โกลด์เริ่มต้น +75</b><span class="shop-price">20 💎</span>
+      </button>
+      <button class="shop-item" data-item="lives5">
+        <img src="assets/ui/shop/crystal_2.png" alt="">
+        <b>หัวใจเริ่มต้น +5</b><span class="shop-price">30 💎</span>
+      </button>
+      <button class="shop-item" data-item="gold150">
+        <img src="assets/ui/shop/crystal_3.png" alt="">
+        <b>โกลด์เริ่มต้น +150</b><span class="shop-price">45 💎</span>
+      </button>
+    </div>
+    <div id="shopPending" class="uiwin-note"></div>
+    <button class="uiwin-close" data-close title="ปิด"></button>
+  </div>
+
 </div>
 
 <script src="maps/level1.js"></script>

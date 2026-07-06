@@ -523,6 +523,9 @@ class Enemy {
     if (this.hp <= 0) {
       this.dying = true;
       state.gold += this.def.reward;
+      stats.kills++;
+      if (stats.kills % 25 === 0) { save('tod.stats', stats); checkAchievements(); }
+      sfxDie();
       updateHud();
     }
   }
@@ -1364,6 +1367,7 @@ startWaveBtn.addEventListener('click', () => {
   state.spawnTimer = 0;
   state.waveInProgress = true;
   startWaveBtn.disabled = true;
+  sfx('wave');
   updateHud();
 });
 
@@ -1442,6 +1446,10 @@ function tryPlaceTower(type, x, y) {
   tower.spot = near.i;
   state.towers.push(tower);
   state.gold -= def.cost;
+  sfx('place');
+  stats.towersBuilt[type] = 1;
+  save('tod.stats', stats);
+  checkAchievements();
   // clear the buy selection after placing so the NEXT click on this tower
   // opens its upgrade panel instead of trying to build on the occupied pad
   state.selectedBuyType = null;
@@ -1489,6 +1497,7 @@ upgradeBtn.addEventListener('click', () => {
   state.gold -= cost;
   t.spent += cost;
   t.level++;
+  sfx('upgrade');
   updateHud();
   renderTowerPanel();
 });
@@ -1498,6 +1507,7 @@ sellBtn.addEventListener('click', () => {
   if (!t) return;
   state.gold += Math.floor(t.spent * 0.6);
   state.towers = state.towers.filter(x => x !== t);
+  sfx('sell');
   deselectTower();
   updateHud();
 });
@@ -1512,19 +1522,30 @@ function triggerGameOver(won) {
   if (won) {
     const stars = starsForLives(state.lives);
     saveStars(activeLevel.id, stars);
+    // crystals reward scales with stars; perfect defence feeds an achievement
+    const gained = 5 + stars * 5;
+    crystals += gained;
+    save('tod.crystals', crystals);
+    if (state.lives >= state.startLives) { stats.perfectWin = true; }
+    save('tod.stats', stats);
+    renderCrystals();
+    checkAchievements();
     renderLevelList(); // refresh locks/stars so the map is current when reopened
-    overlaySub.textContent = `คุณป้องกันฐานสำเร็จครบ ${state.waveMax} เวฟ`;
+    overlaySub.textContent = `คุณป้องกันฐานสำเร็จครบ ${state.waveMax} เวฟ · +${gained} 💎`;
     overlayStars.src = `assets/ui/win/star_${stars + 1}.png`;
     overlayStars.classList.remove('hidden');
     // "next level" only when there IS a next one (it just got unlocked)
     const idx = (window.LEVELS || []).indexOf(activeLevel);
     overlayNextBtn.classList.toggle('hidden', idx < 0 || idx + 1 >= window.LEVELS.length);
     overlayRetryBtn.classList.add('hidden');
+    sfx('win');
   } else {
+    save('tod.stats', stats);
     overlaySub.textContent = `คุณเอาชีวิตรอดถึงเวฟที่ ${state.wave}`;
     overlayStars.classList.add('hidden');
     overlayNextBtn.classList.add('hidden');
     overlayRetryBtn.classList.remove('hidden');
+    sfx('lose');
   }
   overlay.classList.remove('hidden');
 }
@@ -1797,7 +1818,7 @@ function renderLevelList() {
     node.innerHTML =
       (unlocked ? `<span class="wm-num">${i + 1}</span>` : '') +
       `<span class="wm-name">${level.name}</span>`;
-    if (unlocked) node.addEventListener('click', () => selectLevel(level));
+    if (unlocked) node.addEventListener('click', () => openDifficulty(level));
     else node.disabled = true;
     if (!activeNode && unlocked && stars === 0) activeNode = node;
     levelList.appendChild(node);
@@ -1812,14 +1833,27 @@ function openLevelSelect() {
   if (n) n.scrollIntoView({ block: 'center' });
 }
 
-function selectLevel(level) {
+// difficulty presets picked in the SELECT DIFFICULTY window; one-run shop
+// boosts (crystals) are added on top and consumed by the run they start
+const DIFFS = {
+  easy:   { gold: 230, lives: 30 },
+  normal: { gold: 180, lives: 20 },
+  hard:   { gold: 140, lives: 12 },
+};
+let currentDiff = 'normal';
+
+function selectLevel(level, diff) {
   activeLevel = level;
   lanes = level.LANES.map(buildLaneRuntime);
   BUILD_SPOTS = level.BUILD_SPOTS;
   mapReady = false;
 
-  state.gold = 180;
-  state.lives = 20;
+  currentDiff = diff || currentDiff || 'normal';
+  const d = DIFFS[currentDiff] || DIFFS.normal;
+  const boosts = consumeBoosts();
+  state.gold = d.gold + boosts.gold;
+  state.lives = d.lives + boosts.lives;
+  state.startLives = state.lives;
   state.wave = 0;
   state.speed = 1;
   state.paused = false;
@@ -1850,7 +1884,274 @@ changeMapBtn.addEventListener('click', () => {
   openLevelSelect();
 });
 
+// ==================================================================
+// ===== Meta systems: settings/SFX, crystals+shop, achievements, =====
+// ===== difficulty window, main menu and boot loading screen     =====
+// ==================================================================
+
+// ---- persisted stores ----
+function store(key, fallback) {
+  try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
+  catch { return fallback; }
+}
+function save(key, val) {
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+}
+const settings = Object.assign({ sound: true, vol: 0.7 }, store('tod.settings', {}));
+const stats = Object.assign({ kills: 0, towersBuilt: {}, perfectWin: false }, store('tod.stats', {}));
+let crystals = store('tod.crystals', 0);
+let boosts = Object.assign({ gold: 0, lives: 0 }, store('tod.boosts', {}));
+const unlockedAch = new Set(store('tod.ach', []));
+
+// ---- tiny WebAudio synth SFX (no audio assets needed) ----
+let audioCtx = null;
+function sfx(name) {
+  if (!settings.sound) return;
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const t = audioCtx.currentTime;
+    const notes = { // [freq, dur, wave]
+      place:   [196, 0.14, 'square'],
+      upgrade: [392, 0.2, 'triangle'],
+      sell:    [147, 0.16, 'sawtooth'],
+      wave:    [262, 0.25, 'square'],
+      die:     [660, 0.05, 'square'],
+      click:   [520, 0.05, 'triangle'],
+      buy:     [587, 0.18, 'triangle'],
+      ach:     [784, 0.4, 'triangle'],
+      win:     [523, 0.65, 'triangle'],
+      lose:    [160, 0.7, 'sawtooth'],
+    }[name] || [440, 0.1, 'sine'];
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.type = notes[2];
+    o.frequency.setValueAtTime(notes[0], t);
+    if (name === 'win' || name === 'ach') { // little fanfare arpeggio
+      o.frequency.setValueAtTime(notes[0] * 1.25, t + 0.12);
+      o.frequency.setValueAtTime(notes[0] * 1.5, t + 0.24);
+    }
+    if (name === 'lose') o.frequency.exponentialRampToValueAtTime(55, t + notes[1]);
+    const v = 0.22 * settings.vol;
+    g.gain.setValueAtTime(v, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + notes[1]);
+    o.start(t); o.stop(t + notes[1] + 0.05);
+  } catch {}
+}
+let lastDieSfx = 0;
+function sfxDie() { // throttled: waves kill in bursts
+  const now = performance.now();
+  if (now - lastDieSfx > 90) { lastDieSfx = now; sfx('die'); }
+}
+
+// ---- modal framework ----
+const modalDim = document.getElementById('modalDim');
+function openWin(id) {
+  modalDim.classList.remove('hidden');
+  modalDim.querySelectorAll('.uiwin').forEach(w => w.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
+function closeWins() {
+  modalDim.classList.add('hidden');
+}
+modalDim.addEventListener('click', (e) => {
+  if (e.target === modalDim || e.target.hasAttribute('data-close')) { sfx('click'); closeWins(); }
+});
+
+// ---- difficulty window ----
+let pendingLevel = null;
+const diffHints = {
+  easy: 'เริ่มต้น: 230 โกลด์ · 30 หัวใจ',
+  normal: 'เริ่มต้น: 180 โกลด์ · 20 หัวใจ',
+  hard: 'เริ่มต้น: 140 โกลด์ · 12 หัวใจ',
+};
+function openDifficulty(level) {
+  pendingLevel = level;
+  document.getElementById('diffName').textContent = level.name;
+  document.getElementById('diffHint').textContent =
+    'Easy 230g/30❤ · Normal 180g/20❤ · Hard 140g/12❤';
+  sfx('click');
+  openWin('diffWin');
+}
+document.querySelectorAll('.diff-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (!pendingLevel) return;
+    sfx('wave');
+    closeWins();
+    selectLevel(pendingLevel, btn.dataset.diff);
+  });
+});
+
+// ---- settings window ----
+const setSoundBtn = document.getElementById('setSoundBtn');
+const volBarFill = document.getElementById('volBarFill');
+const soundBtn = document.getElementById('soundBtn');
+function renderSettings() {
+  setSoundBtn.classList.toggle('off', !settings.sound);
+  setSoundBtn.textContent = settings.sound ? 'ON' : 'OFF';
+  volBarFill.style.width = Math.round(settings.vol * 100) + '%';
+  soundBtn.style.backgroundImage =
+    `url('assets/ui/menu/${settings.sound ? 'button_sound' : 'button_sound_off'}.png')`;
+}
+setSoundBtn.addEventListener('click', () => {
+  settings.sound = !settings.sound; save('tod.settings', settings);
+  renderSettings(); sfx('click');
+});
+soundBtn.addEventListener('click', () => {
+  settings.sound = !settings.sound; save('tod.settings', settings);
+  renderSettings(); sfx('click');
+});
+document.getElementById('volMinus').addEventListener('click', () => {
+  settings.vol = Math.max(0, Math.round((settings.vol - 0.1) * 10) / 10);
+  save('tod.settings', settings); renderSettings(); sfx('click');
+});
+document.getElementById('volPlus').addEventListener('click', () => {
+  settings.vol = Math.min(1, Math.round((settings.vol + 0.1) * 10) / 10);
+  save('tod.settings', settings); renderSettings(); sfx('click');
+});
+const resetBtn = document.getElementById('resetProgressBtn');
+let resetArmed = false;
+resetBtn.addEventListener('click', () => {
+  if (!resetArmed) {
+    resetArmed = true;
+    resetBtn.textContent = 'แตะอีกครั้งเพื่อยืนยันการล้างข้อมูล!';
+    setTimeout(() => { resetArmed = false; resetBtn.textContent = 'ล้างความคืบหน้าทั้งหมด'; }, 2500);
+    return;
+  }
+  ['tod.progress', 'tod.stats', 'tod.crystals', 'tod.boosts', 'tod.ach'].forEach(k => localStorage.removeItem(k));
+  location.reload();
+});
+
+// ---- crystals + shop ----
+function renderCrystals() {
+  document.querySelectorAll('#crystalVal, .wm-crystal-val').forEach(el => el.textContent = crystals);
+  const parts = [];
+  if (boosts.gold) parts.push(`+${boosts.gold} โกลด์`);
+  if (boosts.lives) parts.push(`+${boosts.lives} หัวใจ`);
+  document.getElementById('shopPending').textContent =
+    parts.length ? `รอใช้ในด่านถัดไป: ${parts.join(' · ')}` : 'ซื้อบูสต์แล้วจะถูกใช้ในด่านถัดไปโดยอัตโนมัติ';
+}
+function consumeBoosts() {
+  const b = { gold: boosts.gold || 0, lives: boosts.lives || 0 };
+  boosts = { gold: 0, lives: 0 };
+  save('tod.boosts', boosts);
+  renderCrystals();
+  return b;
+}
+const SHOP_ITEMS = {
+  gold75:  { cost: 20, apply: () => { boosts.gold += 75; } },
+  lives5:  { cost: 30, apply: () => { boosts.lives += 5; } },
+  gold150: { cost: 45, apply: () => { boosts.gold += 150; } },
+};
+document.querySelectorAll('.shop-item').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const item = SHOP_ITEMS[btn.dataset.item];
+    if (!item) return;
+    if (crystals < item.cost) { showToast('คริสตัลไม่พอ! ชนะด่านเพื่อรับคริสตัล'); return; }
+    crystals -= item.cost;
+    item.apply();
+    save('tod.crystals', crystals); save('tod.boosts', boosts);
+    renderCrystals(); sfx('buy');
+    showToast('ซื้อสำเร็จ! บูสต์จะทำงานในด่านถัดไป');
+  });
+});
+
+// ---- achievements ----
+const ACHIEVEMENTS = [
+  { id: 'first_win',  name: 'ชัยชนะแรก',      desc: 'ชนะด่านใดก็ได้ 1 ด่าน',            test: p => Object.keys(p).length >= 1 },
+  { id: 'three_star', name: 'สามดาวเต็ม',     desc: 'จบด่านด้วยคะแนน 3 ดาว',            test: p => Object.values(p).some(s => s >= 3) },
+  { id: 'five_done',  name: 'นักเดินทาง',      desc: 'ผ่านด่านให้ได้ 5 ด่าน',             test: p => Object.keys(p).length >= 5 },
+  { id: 'all_done',   name: 'ผู้พิชิตแผนที่',   desc: 'ผ่านครบทุกด่าน',                    test: p => Object.keys(p).length >= (window.LEVELS || []).length },
+  { id: 'stars_25',   name: 'นักสะสมดาว',     desc: 'เก็บดาวรวม 25 ดวง',                 test: p => Object.values(p).reduce((a, b) => a + b, 0) >= 25 },
+  { id: 'no_leak',    name: 'ไร้รอยขีดข่วน',   desc: 'ชนะโดยไม่เสียหัวใจเลย',             test: () => stats.perfectWin },
+  { id: 'kills_500',  name: 'นักล่า',          desc: 'กำจัดศัตรูรวม 500 ตัว',             test: () => stats.kills >= 500 },
+  { id: 'all_towers', name: 'สถาปนิกป้อม',    desc: 'สร้างป้อมครบทุกชนิด',               test: () => Object.keys(stats.towersBuilt).length >= Object.keys(TOWER_DEFS).length },
+];
+function checkAchievements() {
+  const p = loadProgress();
+  for (const a of ACHIEVEMENTS) {
+    if (!unlockedAch.has(a.id) && a.test(p)) {
+      unlockedAch.add(a.id);
+      save('tod.ach', [...unlockedAch]);
+      showToast(`🏆 ปลดล็อกความสำเร็จ: ${a.name}`);
+      sfx('ach');
+    }
+  }
+}
+function renderAchievements() {
+  const list = document.getElementById('achList');
+  list.innerHTML = '';
+  for (const a of ACHIEVEMENTS) {
+    const done = unlockedAch.has(a.id);
+    const row = document.createElement('div');
+    row.className = 'ach-row' + (done ? ' done' : '');
+    row.innerHTML =
+      `<span class="ach-star"><img src="assets/ui/achievement/star.png" alt=""></span>` +
+      `<span class="ach-txt"><b>${a.name}</b><small>${a.desc}</small></span>` +
+      (done ? `<img class="ach-unlocked" src="assets/ui/achievement/text_unlocked.png" alt="unlocked">` : '');
+    list.appendChild(row);
+  }
+}
+
+// ---- open buttons (menu + world-map toolbar) ----
+function bindOpen(id, fn) { document.getElementById(id).addEventListener('click', () => { sfx('click'); fn(); }); }
+bindOpen('menuSettingsBtn', () => { renderSettings(); openWin('setWin'); });
+bindOpen('wmSettingsBtn', () => { renderSettings(); openWin('setWin'); });
+bindOpen('menuAchBtn', () => { renderAchievements(); openWin('achWin'); });
+bindOpen('wmAchBtn', () => { renderAchievements(); openWin('achWin'); });
+bindOpen('menuShopBtn', () => { renderCrystals(); openWin('shopWin'); });
+bindOpen('wmShopBtn', () => { renderCrystals(); openWin('shopWin'); });
+
+// ---- main menu + boot loading screen ----
+const bootScreen = document.getElementById('bootScreen');
+const mainMenu = document.getElementById('mainMenu');
+document.getElementById('playBtn').addEventListener('click', () => {
+  sfx('wave');
+  mainMenu.classList.add('hidden');
+  openLevelSelect();
+});
+document.getElementById('wmHomeBtn').addEventListener('click', () => {
+  sfx('click');
+  levelSelect.classList.add('hidden');
+  mainMenu.classList.remove('hidden');
+});
+
+function boot() {
+  const fill = document.getElementById('bootBarFill');
+  const urls = [
+    'assets/ui/menu/bg.png', 'assets/ui/menu/logo.png', 'assets/ui/menu/button_play.png',
+    'assets/worldmap/LevelAreaFull.png', 'assets/worldmap/AvailableLvl.png',
+    'assets/worldmap/LockLvl.png', 'assets/worldmap/1Star.png',
+    'assets/worldmap/2Star.png', 'assets/worldmap/3Star.png',
+    'assets/ui/win/table.png', 'assets/ui/win/header_win.png', 'assets/ui/failed/header_failed.png',
+    'assets/ui/levels/btton_empty.png', 'assets/ui/interface_game/table.png',
+    'assets/ui/interface_game/button_start.png', 'assets/ui/difficulty/header_diff.png',
+  ];
+  let loaded = 0;
+  const done = () => {
+    loaded++;
+    fill.style.width = Math.round(loaded / urls.length * 100) + '%';
+    if (loaded >= urls.length) {
+      setTimeout(() => {
+        bootScreen.classList.add('gone');
+        mainMenu.classList.remove('hidden');
+        setTimeout(() => bootScreen.remove(), 600);
+      }, 250);
+    }
+  };
+  urls.forEach(u => {
+    const im = new Image();
+    im.onload = done; im.onerror = done;
+    im.src = u;
+  });
+}
+
+// levelSelect starts hidden behind the menu; the map opens from PLAY
+levelSelect.classList.add('hidden');
 renderLevelList();
-openLevelSelect();
+renderSettings();
+renderCrystals();
+checkAchievements();
 updateHud();
+boot();
 requestAnimationFrame(loop);
