@@ -1505,13 +1505,20 @@ function triggerGameOver(won) {
   state.running = false;
   overlayHeader.src = won ? 'assets/gui/header_win.png' : 'assets/gui/header_failed.png';
   overlayTitle.textContent = won ? 'ชนะแล้ว!' : 'พ่ายแพ้!';
-  overlaySub.textContent = won ? `คุณป้องกันฐานสำเร็จครบ ${state.waveMax} เวฟ` : `คุณเอาชีวิตรอดถึงเวฟที่ ${state.wave}`;
+  if (won) {
+    const stars = starsForLives(state.lives);
+    saveStars(activeLevel.id, stars);
+    renderLevelList(); // refresh locks/stars so the map is current when reopened
+    overlaySub.textContent = `คุณป้องกันฐานสำเร็จครบ ${state.waveMax} เวฟ · ได้ ${stars}/3 ดาว`;
+  } else {
+    overlaySub.textContent = `คุณเอาชีวิตรอดถึงเวฟที่ ${state.wave}`;
+  }
   overlay.classList.remove('hidden');
 }
 overlayBtn.addEventListener('click', () => {
   overlay.classList.add('hidden');
   activeLevel = null;
-  levelSelect.classList.remove('hidden');
+  openLevelSelect();
 });
 
 // ---- Main loop ----
@@ -1643,15 +1650,78 @@ const levelSelect = document.getElementById('levelSelect');
 const levelList = document.getElementById('levelList');
 const changeMapBtn = document.getElementById('changeMapBtn');
 
-function renderLevelList() {
-  levelList.innerHTML = '';
-  for (const level of window.LEVELS || []) {
-    const card = document.createElement('button');
-    card.className = 'level-card';
-    card.innerHTML = `<b>${level.name}</b><span>${level.desc}</span>`;
-    card.addEventListener('click', () => selectLevel(level));
-    levelList.appendChild(card);
+// ---- Level progress: stars + locks, persisted across visits ----
+// World-map model (craftpix "level map" style): level 1 sits at the BOTTOM
+// of a tall scrolling map, the path snakes upward to the final level. Each
+// node is locked until the previous level is beaten; wins award 1-3 stars
+// by how many lives survived (star art: assets/gui/star_1..4.png = 0..3).
+const PROGRESS_KEY = 'tod.progress';
+function loadProgress() {
+  try { return JSON.parse(localStorage.getItem(PROGRESS_KEY)) || {}; }
+  catch { return {}; }
+}
+function saveStars(id, stars) {
+  const p = loadProgress();
+  if ((p[id] || 0) < stars) {
+    p[id] = stars;
+    try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(p)); } catch {}
   }
+}
+function starsForLives(lives) { return lives >= 16 ? 3 : lives >= 8 ? 2 : 1; }
+
+function renderLevelList() {
+  const levels = window.LEVELS || [];
+  const progress = loadProgress();
+  levelList.innerHTML = '';
+
+  // serpentine node layout, bottom -> top
+  const SPACING = 128, MARGIN = 96;
+  const mapH = MARGIN * 2 + SPACING * Math.max(0, levels.length - 1);
+  levelList.style.height = mapH + 'px';
+  const XS = [24, 50, 76, 50]; // % across the map, repeating zigzag
+  const pos = levels.map((_, i) => ({ x: XS[i % 4], y: mapH - MARGIN - i * SPACING }));
+
+  // dotted trail between nodes (plain divs in %/px coords scale cleanly,
+  // no SVG viewBox distortion)
+  for (let i = 0; i < levels.length - 1; i++) {
+    const a = pos[i], b = pos[i + 1];
+    const walked = (progress[levels[i].id] || 0) > 0;
+    for (let k = 1; k <= 5; k++) {
+      const t = k / 6;
+      const dot = document.createElement('div');
+      dot.className = 'wm-dot' + (walked ? ' done' : '');
+      dot.style.left = (a.x + (b.x - a.x) * t) + '%';
+      dot.style.top = (a.y + (b.y - a.y) * t) + 'px';
+      levelList.appendChild(dot);
+    }
+  }
+
+  let activeNode = null;
+  levels.forEach((level, i) => {
+    const stars = progress[level.id] || 0;
+    const unlocked = i === 0 || (progress[levels[i - 1].id] || 0) > 0;
+    const node = document.createElement('button');
+    node.className = 'wm-node ' + (!unlocked ? 'locked' : stars > 0 ? 'done' : 'active');
+    node.style.left = pos[i].x + '%';
+    node.style.top = pos[i].y + 'px';
+    node.title = level.desc;
+    node.innerHTML =
+      `<span class="wm-num">${unlocked ? i + 1 : '🔒'}</span>` +
+      `<img class="wm-stars" src="assets/gui/star_${stars + 1}.png" alt="${stars}/3 ดาว">` +
+      `<span class="wm-name">${level.name}</span>`;
+    if (unlocked) node.addEventListener('click', () => selectLevel(level));
+    else node.disabled = true;
+    if (!activeNode && unlocked && stars === 0) activeNode = node;
+    levelList.appendChild(node);
+  });
+  // remember where the player "is" so opening the map scrolls there
+  levelList._focusNode = activeNode || levelList.querySelector('.wm-node.done');
+}
+
+function openLevelSelect() {
+  levelSelect.classList.remove('hidden');
+  const n = levelList._focusNode;
+  if (n) n.scrollIntoView({ block: 'center' });
 }
 
 function selectLevel(level) {
@@ -1688,9 +1758,10 @@ function selectLevel(level) {
 
 changeMapBtn.addEventListener('click', () => {
   activeLevel = null;
-  levelSelect.classList.remove('hidden');
+  openLevelSelect();
 });
 
 renderLevelList();
+openLevelSelect();
 updateHud();
 requestAnimationFrame(loop);
